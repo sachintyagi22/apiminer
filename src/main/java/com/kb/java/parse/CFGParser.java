@@ -15,7 +15,7 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import com.kb.java.dom.expression.EclipseExpressionAdapter;
+import com.kb.java.dom.expression.ExpressionAdapter;
 import com.kb.java.dom.expression.Expression;
 import com.kb.java.dom.expression.UnknownExpressionException;
 import com.kb.java.dom.expression.Variable;
@@ -41,7 +41,7 @@ public class CFGParser {
 		List<TypeDeclaration> types = typeDecExtractor.getTypeDefs(unit);
 		Map<String, String> typeMap = importExtractor.getImports(unit);
 		ClassVariableResolver resolver = new ClassVariableResolver(typeMap, importExtractor.getPkg());
-		EclipseExpressionAdapter eclipseExpressionAdapter = new EclipseExpressionAdapter(resolver);
+		ExpressionAdapter eclipseExpressionAdapter = new ExpressionAdapter(resolver);
 		List<ClassDeclaration> ret = new LinkedList<ClassDeclaration>();
 
 		for (TypeDeclaration type : types) {

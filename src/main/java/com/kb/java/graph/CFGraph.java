@@ -26,11 +26,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.kb.java.dom.condition.Condition;
-import com.kb.java.dom.expression.EclipseExpressionAdapter;
+import com.kb.java.dom.expression.ExpressionAdapter;
 import com.kb.java.dom.expression.Expression;
 import com.kb.java.dom.expression.UnknownExpressionException;
 import com.kb.java.dom.naming.Declaration;
-import com.kb.java.dom.statement.EclipseStatementAdapter;
+import com.kb.java.dom.statement.StatementAdapter;
 import com.kb.java.dom.statement.ReturnStatement;
 import com.kb.java.dom.statement.ThrowStatement;
 import com.kb.java.parse.ClassVariableResolver;
@@ -49,8 +49,8 @@ public class CFGraph implements Iterable<CFNode> {
 	private MethodDeclaration methodSig;
 	private Map<Statement, CFNode> stmtNodeMap = new HashMap<>();
 	private ClassVariableResolver resolver;
-	private EclipseExpressionAdapter eclipseExpressionAdapter;
-	private EclipseStatementAdapter eclipseStatementAdapter;
+	private ExpressionAdapter eclipseExpressionAdapter;
+	private StatementAdapter eclipseStatementAdapter;
 	private CompilationUnit unit;
 	
 
@@ -59,8 +59,8 @@ public class CFGraph implements Iterable<CFNode> {
 	
 	public CFGraph(MethodDeclaration methodSig, ClassVariableResolver resolver, CompilationUnit unit)
 			throws UnknownExpressionException {
-		this.eclipseStatementAdapter = new EclipseStatementAdapter(resolver, unit);
-		this.eclipseExpressionAdapter = new EclipseExpressionAdapter(resolver);
+		this.eclipseStatementAdapter = new StatementAdapter(resolver, unit);
+		this.eclipseExpressionAdapter = new ExpressionAdapter(resolver);
 		this.resolver = resolver;
 		this.unit = unit;
 		createCFG(methodSig);
@@ -254,7 +254,7 @@ public class CFGraph implements Iterable<CFNode> {
 
 			Expression exp = eclipseExpressionAdapter.translate(fstmt
 					.getExpression());
-			Declaration declar = EclipseExpressionAdapter
+			Declaration declar = ExpressionAdapter
 					.translateDeclaration(fstmt.getParameter());
 
 			EnhancedForNode forNode = new EnhancedForNode(declar, exp);
