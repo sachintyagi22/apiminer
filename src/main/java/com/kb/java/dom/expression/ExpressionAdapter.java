@@ -83,7 +83,7 @@ public class ExpressionAdapter {
 
 			if(target instanceof Variable){
 				int line = unit.getLineNumber(name.getStartPosition());
-				int column = unit.getColumnNumber(name.getStartPosition())-1;
+				int column = unit.getColumnNumber(name.getStartPosition());
 				int argSize = arguments == null? 0: arguments.size();
 				String targetType = resolver.getVarType(((Variable) target).getName());
 				resolver.addMethodCallTypes(targetType, line, column, name.getLength(), method, argSize);
@@ -133,7 +133,13 @@ public class ExpressionAdapter {
 
 			List<Expression> arguments = translateArguments(cic.arguments());
 
-			Type t = new Type(cic.getType().toString());
+			org.eclipse.jdt.core.dom.Type type = cic.getType();
+			int line = unit.getLineNumber(type.getStartPosition());
+			int column = unit.getColumnNumber(type.getStartPosition());
+			int argSize = arguments == null? 0: arguments.size();
+
+			resolver.addMethodCallTypes(type.toString(), line, column, type.getLength(), "<init>", argSize);
+			Type t = new Type(type.toString());
 
 			Expression target = translate(cic.getExpression());
 

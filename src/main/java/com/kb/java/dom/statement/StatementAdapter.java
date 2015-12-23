@@ -4,12 +4,13 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.kb.java.dom.expression.ExpressionAdapter;
 import com.kb.java.dom.expression.Expression;
+import com.kb.java.dom.expression.ExpressionAdapter;
 import com.kb.java.dom.expression.UnknownExpressionException;
 import com.kb.java.dom.expression.Variable;
 import com.kb.java.dom.naming.Type;
@@ -93,12 +94,36 @@ public class StatementAdapter {
 			org.eclipse.jdt.core.dom.VariableDeclarationStatement vdstmt = (org.eclipse.jdt.core.dom.VariableDeclarationStatement) stmt;
 
 			org.eclipse.jdt.core.dom.Type t = vdstmt.getType();
-			Type type = ExpressionAdapter
-					.translateType(t);
-			int line = unit.getLineNumber(t.getStartPosition());
-			int col = unit.getColumnNumber(t.getStartPosition());
-			String fullType = resolver.getSafeType(type.toString());
-			type = new Type(fullType);
+			Type type = null;
+			int line = -1;
+			int col = -1;
+			String fullType = null;
+			
+			if (t instanceof ParameterizedType) {
+				ParameterizedType pt = (ParameterizedType) t;
+				org.eclipse.jdt.core.dom.Type mainType = pt.getType();
+				List<org.eclipse.jdt.core.dom.Type> typeParams = pt.typeArguments();
+				type = ExpressionAdapter.translateType(mainType);
+				line = unit.getLineNumber(mainType.getStartPosition());
+				col = unit.getColumnNumber(mainType.getStartPosition());
+				fullType = resolver.getSafeType(mainType.toString());
+				type = new Type(fullType);
+				for(org.eclipse.jdt.core.dom.Type tp: typeParams){
+					int ln = unit.getLineNumber(tp.getStartPosition());
+					int cl = unit.getColumnNumber(tp.getStartPosition());
+					String ft = resolver.getSafeType(tp.toString());
+					
+					resolver.addMethodCallTypes(ft, ln, cl, tp.getLength(), null, null);
+				}
+			} else {
+				type = ExpressionAdapter.translateType(t);
+				line = unit.getLineNumber(t.getStartPosition());
+				col = unit.getColumnNumber(t.getStartPosition());
+				fullType = resolver.getSafeType(type.toString());
+				type = new Type(fullType);
+			}
+			
+			
 			List<VariableDeclarationFragment> frags = vdstmt.fragments();
 
 			for (VariableDeclarationFragment frag : frags) {

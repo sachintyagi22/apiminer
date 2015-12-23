@@ -178,7 +178,7 @@ public class DefaultRequestDirector implements RequestDirector {
 	protected RoutedRequest handleResponse(final RoutedRequest roureq,
 			final HttpResponse response, final HttpContext context)
 			throws HttpException, IOException {
-		String something = "";
+		String something = new String();
 		String somethingElse = "";
 		List<Something> somethingList = null;
 		final HttpRoute route = roureq.getRoute();
