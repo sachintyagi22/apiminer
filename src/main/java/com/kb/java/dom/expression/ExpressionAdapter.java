@@ -3,7 +3,9 @@ package com.kb.java.dom.expression;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.InstanceofExpression;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 
 import com.kb.java.dom.condition.AndCondition;
@@ -18,9 +20,11 @@ import com.kb.java.parse.ClassVariableResolver;
 public class ExpressionAdapter {
 	
 	private ClassVariableResolver resolver;
+	private CompilationUnit unit;
 	
-	public ExpressionAdapter(ClassVariableResolver resolver) {
+	public ExpressionAdapter(ClassVariableResolver resolver, CompilationUnit unit) {
 		this.resolver = resolver;
+		this.unit = unit;
 	}
 
 	public Expression translate(org.eclipse.jdt.core.dom.Expression expression)
@@ -73,13 +77,19 @@ public class ExpressionAdapter {
 
 			org.eclipse.jdt.core.dom.Expression exp = inv.getExpression();
 			Expression target = translate(exp);
+			List<Expression> arguments = translateArguments(inv.arguments());
+			SimpleName name = inv.getName();
+			String method = name.toString();
+
 			if(target instanceof Variable){
+				int line = unit.getLineNumber(name.getStartPosition());
+				int column = unit.getColumnNumber(name.getStartPosition())-1;
+				int argSize = arguments == null? 0: arguments.size();
 				String targetType = resolver.getVarType(((Variable) target).getName());
+				resolver.addMethodCallTypes(targetType, line, column, name.getLength(), method, argSize);
 				target = new Variable(targetType);
 			}
-			List<Expression> arguments = translateArguments(inv.arguments());
 
-			String method = inv.getName().toString();
 			InvocationExpression invokeExpr = new InvocationExpression(target, method, arguments);
 
 			return invokeExpr;

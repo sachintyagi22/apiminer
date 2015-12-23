@@ -11,9 +11,9 @@ public class ClassVariableResolver {
 	private Map<String, String> typeMap;
 	private String pkg;
 	private static Set<String> langClassSet = new HashSet<String>();
-	private Set<TypeLocation> typeLocations = new HashSet<TypeLocation>(); 
-	
-	static{
+	private Set<TypeLocation> typeLocations = new HashSet<TypeLocation>();
+
+	static {
 		String javaLangClasses = "Appendable,CharSequence,Comparable,Readable,Thread.UncaughtExceptionHandler,"
 				+ "AutoCloseable,Cloneable,Iterable,Runnable,Boolean,Character,Character.UnicodeBlock,ClassLoader,Compiler,Enum,"
 				+ "InheritableThreadLocal,Long,Number,Package,ProcessBuilder,Runtime,SecurityManager,StackTraceElement,"
@@ -32,12 +32,12 @@ public class ClassVariableResolver {
 				+ "Error,IllegalAccessError,InstantiationError,LinkageError,NoSuchFieldError,OutOfMemoryError,"
 				+ "ThreadDeath,UnsatisfiedLinkError,VerifyError,Deprecated,SafeVarargs,Override,SuppressWarnings";
 		String[] langTypes = javaLangClasses.split(",");
-		for(String t: langTypes){
+		for (String t : langTypes) {
 			langClassSet.add(t);
 		}
-		
+
 	}
-	
+
 	public ClassVariableResolver(Map<String, String> typeMap, String pkg) {
 		this.typeMap = typeMap;
 		this.pkg = pkg;
@@ -47,14 +47,15 @@ public class ClassVariableResolver {
 		typeMap.put(shortType, longType);
 	}
 
-	public void addVarType(String var, String type, Integer line, Integer column) {
+	public void addVarType(String var, String type, Integer line,
+			Integer column, Integer length) {
 		String longType = typeMap.get(type);
 		if (longType == null) {
 			// Use short type
 			longType = type;
 		}
 		varVsTypeMap.put(var, longType);
-		typeLocations.add(new TypeLocation(longType, line, column));
+		typeLocations.add(new TypeLocation(longType, line, column, length));
 	}
 
 	public String getType(String shortType) {
@@ -63,18 +64,18 @@ public class ClassVariableResolver {
 
 	public String getSafeType(String shortType) {
 		String type = getType(shortType);
-		
+
 		if (type == null) {
-			//May be because it is a java.lang type
-			if(langClassSet.contains(shortType)){
-				type = "java.lang."+shortType;
+			// May be because it is a java.lang type
+			if (langClassSet.contains(shortType)) {
+				type = "java.lang." + shortType;
 			}
 		}
-		
-		if(type == null){
-			type = (pkg==null? "": pkg+".") + shortType;
+
+		if (type == null) {
+			type = (pkg == null ? "" : pkg + ".") + shortType;
 		}
-		
+
 		return type;
 	}
 
@@ -87,9 +88,13 @@ public class ClassVariableResolver {
 		return type;
 	}
 
+	public void addMethodCallTypes(String type, Integer line, Integer column, Integer length,
+			String method, Integer argNum) {
+		typeLocations.add(new TypeLocation(type, line, column, length, method, argNum));
+	}
+
 	public Set<TypeLocation> getTypeLocations() {
 		return typeLocations;
 	}
-
 
 }

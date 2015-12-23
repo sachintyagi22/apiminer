@@ -25,7 +25,7 @@ public class StatementAdapter {
 	private CompilationUnit unit;
 	
 	public StatementAdapter(ClassVariableResolver resolver, CompilationUnit unit) {
-		this.eclipseExpressionAdapter = new ExpressionAdapter(resolver);
+		this.eclipseExpressionAdapter = new ExpressionAdapter(resolver, unit);
 		this.resolver = resolver;
 		this.unit = unit;
 	}
@@ -115,7 +115,7 @@ public class StatementAdapter {
 							eclipseExpressionAdapter.translate(frag
 									.getInitializer()));
 				}
-				resolver.addVarType(varName, fullType, line, col);
+				resolver.addVarType(varName, fullType, line, col, t.getLength());
 
 				stmtList.add(ret);
 			}

@@ -60,7 +60,7 @@ public class CFGraph implements Iterable<CFNode> {
 	public CFGraph(MethodDeclaration methodSig, ClassVariableResolver resolver, CompilationUnit unit)
 			throws UnknownExpressionException {
 		this.eclipseStatementAdapter = new StatementAdapter(resolver, unit);
-		this.eclipseExpressionAdapter = new ExpressionAdapter(resolver);
+		this.eclipseExpressionAdapter = new ExpressionAdapter(resolver, unit);
 		this.resolver = resolver;
 		this.unit = unit;
 		createCFG(methodSig);
@@ -80,13 +80,14 @@ public class CFGraph implements Iterable<CFNode> {
 		
 		for (VariableDeclaration param : params) {
 			int startPosition = param.getStartPosition();
-			int line = unit.getLineNumber(startPosition)-1;
+			int line = unit.getLineNumber(startPosition);
 			int column = unit.getColumnNumber(startPosition);
+			
 			String shortType = param.getStructuralProperty(
 					SingleVariableDeclaration.TYPE_PROPERTY).toString();
 			String name = param.getName().toString();
 			String fullType = resolver.getSafeType(shortType);
-			resolver.addVarType(name, fullType, line, column);
+			resolver.addVarType(name, fullType, line, column, param.getLength());
 		}
 
 		if (body == null)

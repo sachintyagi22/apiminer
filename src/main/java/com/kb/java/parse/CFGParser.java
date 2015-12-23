@@ -41,16 +41,18 @@ public class CFGParser {
 		List<TypeDeclaration> types = typeDecExtractor.getTypeDefs(unit);
 		Map<String, String> typeMap = importExtractor.getImports(unit);
 		ClassVariableResolver resolver = new ClassVariableResolver(typeMap, importExtractor.getPkg());
-		ExpressionAdapter eclipseExpressionAdapter = new ExpressionAdapter(resolver);
+		ExpressionAdapter eclipseExpressionAdapter = new ExpressionAdapter(resolver, unit);
 		List<ClassDeclaration> ret = new LinkedList<ClassDeclaration>();
 
 		for (TypeDeclaration type : types) {
 			ClassDeclaration cd = translateTypeDec(unit, type);
 			
 			for (FieldDeclaration fd : type.getFields()) {
-				String typeString = fd.getType().toString();
-				int line = unit.getLineNumber(fd.getType().getStartPosition());
-				int col = unit.getColumnNumber(fd.getType().getStartPosition());
+				org.eclipse.jdt.core.dom.Type fdType = fd.getType();
+				String typeString = fdType.toString();
+				int line = unit.getLineNumber(fdType.getStartPosition());
+				int col = unit.getColumnNumber(fdType.getStartPosition());
+				int length = fdType.getLength();
 				String longType = resolver.getSafeType(typeString);
 				Type t = new Type(longType);
 
@@ -62,7 +64,7 @@ public class CFGParser {
 							.getInitializer());
 					VariableDeclarationStatement vs = new VariableDeclarationStatement(
 							t, var, init);
-					resolver.addVarType(var.getName(), longType, line, col);
+					resolver.addVarType(var.getName(), longType, line, col, length);
 					cd.addFieldDec(vs);
 				}
 			}

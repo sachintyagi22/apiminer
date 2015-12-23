@@ -7,15 +7,17 @@ public class TypeLocation {
 	private Integer argNumber;
 	private Integer line;
 	private Integer column;
+	private Integer length;
 	
-	public TypeLocation(String type, Integer line, Integer column) {
+	public TypeLocation(String type, Integer line, Integer column, Integer length) {
 		this.type = type;
 		this.line = line; 
 		this.column = column;
+		this.length = length;
 	}
 	
-	public TypeLocation(String type, Integer line, Integer column, String method, Integer argNumber) {
-		this(type, line, column);
+	public TypeLocation(String type, Integer line, Integer column, Integer length, String method, Integer argNumber) {
+		this(type, line, column, length);
 		this.method = method;
 		this.argNumber = argNumber;
 	}
@@ -59,6 +61,15 @@ public class TypeLocation {
 	public void setColumn(Integer column) {
 		this.column = column;
 	}
+	
+
+	public Integer getLength() {
+		return length;
+	}
+
+	public void setLength(Integer length) {
+		this.length = length;
+	}
 
 	@Override
 	public int hashCode() {
@@ -67,6 +78,7 @@ public class TypeLocation {
 		result = prime * result
 				+ ((argNumber == null) ? 0 : argNumber.hashCode());
 		result = prime * result + ((column == null) ? 0 : column.hashCode());
+		result = prime * result + ((length == null) ? 0 : length.hashCode());
 		result = prime * result + ((line == null) ? 0 : line.hashCode());
 		result = prime * result + ((method == null) ? 0 : method.hashCode());
 		result = prime * result + ((type == null) ? 0 : type.hashCode());
@@ -92,6 +104,11 @@ public class TypeLocation {
 				return false;
 		} else if (!column.equals(other.column))
 			return false;
+		if (length == null) {
+			if (other.length != null)
+				return false;
+		} else if (!length.equals(other.length))
+			return false;
 		if (line == null) {
 			if (other.line != null)
 				return false;
@@ -114,7 +131,7 @@ public class TypeLocation {
 	public String toString() {
 		return "TypeLocation [type=" + type + ", method=" + method
 				+ ", argNumber=" + argNumber + ", line=" + line + ", column="
-				+ column + "]";
+				+ column + ", length=" + length + "]";
 	}
 
 }
