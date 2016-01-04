@@ -35,6 +35,11 @@ public class EnhancedForNode extends CFNode {
 	public CFNode getNext() {
 		return exitNode;
 	}
+	
+	@Override
+	public String getLabel() {
+		return "ENHANCED FOR";
+	}
 
 	@Override
 	public String toString() {

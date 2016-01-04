@@ -1,6 +1,7 @@
 package com.kb.java.graph;
 
 
+
 public class BreakNode extends CFNode {
 
 	private CFNode next;
@@ -17,7 +18,12 @@ public class BreakNode extends CFNode {
 	public void setNext(CFNode next) {
 		this.next = next;
 	}
-
+	
+	@Override
+	public String getLabel() {
+		return "BREAK";
+	}
+	
 	@Override
 	public String toString() {
 		return "break to " + next;

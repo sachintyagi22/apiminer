@@ -42,5 +42,9 @@ public abstract class Expression implements Serializable {
 
 	@Override
 	public abstract Expression clone();
+	
+	public String getLabel() {
+		return toString();
+	}
 
 }

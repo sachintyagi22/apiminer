@@ -54,4 +54,8 @@ public abstract class Statement implements Serializable {
 	public int getCharIndex() {
 		return charIndex;
 	}
+
+	public String getLabel() {
+		return toString();
+	}
 }

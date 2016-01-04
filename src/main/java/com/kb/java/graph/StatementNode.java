@@ -19,6 +19,11 @@ public class StatementNode extends CFNode {
 	public void setNext(CFNode next) {
 		this.next = next;
 	}
+	
+	@Override
+	public String getLabel() {
+		return statement.getLabel();
+	}
 
 	@Override
 	public String toString() {

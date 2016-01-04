@@ -1,5 +1,6 @@
 package com.kb.java.dom.naming;
 
+
 public class Type {
 
 	private String name;
@@ -7,7 +8,7 @@ public class Type {
 	public Type(String name) {
 		this.name = name;
 	}
-
+	
 	@Override
 	public String toString() {
 		return name;

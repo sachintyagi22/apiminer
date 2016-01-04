@@ -25,6 +25,11 @@ public class ElseBranchNode extends CFNode {
 	public void setBranchHead(CFNode loopHead) {
 		branch = loopHead;
 	}
+	
+	@Override
+	public String getLabel() {
+		return "ELSE";
+	}
 
 	@Override
 	public String toString() {

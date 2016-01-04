@@ -25,6 +25,11 @@ public class ExitLoopNode extends CFNode {
 	public void setLoopHead(CFNode loopHead) {
 		this.loopHead = loopHead;
 	}
+	
+	@Override
+	public String getLabel() {
+		return "EXIT LOOP";
+	}
 
 	@Override
 	public String toString() {

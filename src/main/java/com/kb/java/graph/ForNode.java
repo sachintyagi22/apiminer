@@ -35,6 +35,11 @@ public class ForNode extends CFNode {
 	public Condition getCondition() {
 		return condition;
 	}
+	
+	@Override
+	public String getLabel() {
+		return "FOR";
+	}
 
 	@Override
 	public String toString() {

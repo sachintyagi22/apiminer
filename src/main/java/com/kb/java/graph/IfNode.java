@@ -1,5 +1,8 @@
 package com.kb.java.graph;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.kb.java.dom.condition.Condition;
 
 public class IfNode extends CFNode {
@@ -35,6 +38,19 @@ public class IfNode extends CFNode {
 
 	public CFNode getExitNode() {
 		return exitNode;
+	}
+	
+	@Override
+	public List<CFNode> getSubgraphs() {
+		ArrayList<CFNode> subGraphs = new ArrayList<CFNode>();
+		subGraphs.add(thenNode);
+		subGraphs.add(elseNode);
+		return subGraphs;
+	}
+	
+	@Override
+	public String getLabel() {
+		return "IF: " + condition;
 	}
 
 	@Override

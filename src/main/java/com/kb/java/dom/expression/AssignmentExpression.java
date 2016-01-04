@@ -42,6 +42,11 @@ public class AssignmentExpression extends Expression {
 	}
 
 	@Override
+	public String getLabel() {
+		return rightHandSide.getLabel();
+	}
+	
+	@Override
 	public String toString() {
 		return leftHandSide + " = " + rightHandSide;
 	}

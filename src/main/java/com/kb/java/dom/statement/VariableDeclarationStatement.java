@@ -28,6 +28,11 @@ public class VariableDeclarationStatement extends Statement {
 			this.init = new AssignmentExpression(var, init);
 		}
 	}
+	
+	@Override
+	public String getLabel() {
+		return init.getExpression().getLabel() + init.getExpression().getClass();
+	}
 
 	@Override
 	public String toString() {

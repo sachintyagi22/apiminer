@@ -23,6 +23,11 @@ public class SwitchToCaseNode extends CFNode {
 		return new ComparisonExpression(switchNode.getExpression(),
 				caseNode.getExpression(), "==");
 	}
+	
+	@Override
+	public String getLabel() {
+		return toString();
+	}
 
 	@Override
 	public String toString() {

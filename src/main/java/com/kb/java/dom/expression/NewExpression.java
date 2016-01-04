@@ -21,6 +21,11 @@ public class NewExpression extends Expression {
 	}
 
 	@Override
+	public String getLabel() {
+		return (target == null? ("") : (target+ "." ))+ classCreated + "<init>";
+	}
+	
+	@Override
 	public String toString() {
 		if (target != null)
 			return "new " + target + "." + classCreated + paramString();
