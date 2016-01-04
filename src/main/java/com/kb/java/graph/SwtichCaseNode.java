@@ -18,6 +18,11 @@ public class SwtichCaseNode extends CFNode {
 	public void setNext(CFNode next) {
 		this.next = next;
 	}
+	
+	@Override
+	public String getLabel() {
+		return toString();
+	}
 
 	@Override
 	public String toString() {

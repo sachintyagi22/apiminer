@@ -17,6 +17,11 @@ public class ExpressionStatement extends OneExpressionStatement {
 	}
 
 	@Override
+	public String getLabel() {
+		return exp.getLabel();
+	}
+	
+	@Override
 	public String toString() {
 		return exp.toString();
 	}

@@ -27,6 +27,11 @@ public class ThenBranchNode extends CFNode {
 	}
 
 	@Override
+	public String getLabel() {
+		return "THEN:" + branch.getLabel();
+	}
+	
+	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append(next.toString());

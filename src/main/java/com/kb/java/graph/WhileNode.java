@@ -32,6 +32,12 @@ public class WhileNode extends CFNode {
 	public CFNode getNext() {
 		return exitNode;
 	}
+	
+	
+	@Override
+	public String getLabel() {
+		return "WHILE";
+	}
 
 	@Override
 	public String toString() {

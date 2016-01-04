@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -15,8 +14,8 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 
-import com.kb.java.dom.expression.ExpressionAdapter;
 import com.kb.java.dom.expression.Expression;
+import com.kb.java.dom.expression.ExpressionAdapter;
 import com.kb.java.dom.expression.UnknownExpressionException;
 import com.kb.java.dom.expression.Variable;
 import com.kb.java.dom.naming.Declaration;
@@ -24,6 +23,7 @@ import com.kb.java.dom.naming.MethodSignature;
 import com.kb.java.dom.naming.Type;
 import com.kb.java.dom.statement.VariableDeclarationStatement;
 import com.kb.java.graph.CFGraph;
+import com.kb.java.parse.JavaASTParser.ParseType;
 
 public class CFGParser {
 
@@ -34,10 +34,10 @@ public class CFGParser {
 	public List<ClassDeclaration> parse(String source)
 			throws UnknownExpressionException {
 
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
-		parser.setSource(source.toCharArray());
+		JavaASTParser pars = new JavaASTParser(true);
+		ASTNode cu = pars.getAST(source, ParseType.COMPILATION_UNIT);
+		CompilationUnit unit = (CompilationUnit) cu;
 		
-		CompilationUnit unit = (CompilationUnit) parser.createAST(null);
 		List<TypeDeclaration> types = typeDecExtractor.getTypeDefs(unit);
 		Map<String, String> typeMap = importExtractor.getImports(unit);
 		ClassVariableResolver resolver = new ClassVariableResolver(typeMap, importExtractor.getPkg());

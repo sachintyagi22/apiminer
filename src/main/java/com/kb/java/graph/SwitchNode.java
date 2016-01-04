@@ -24,6 +24,11 @@ public class SwitchNode extends CFNode {
 	public void addCase(SwitchToCaseNode stcn) {
 		cases.add(stcn);
 	}
+	
+	@Override
+	public String getLabel() {
+		return "SWITCH:" + exp;
+	}
 
 	@Override
 	public String toString() {

@@ -15,9 +15,7 @@ public class InvocationExpression extends ExpressionCondition {
 	private static final long serialVersionUID = 1L;
 
 	Expression target;
-
 	List<Expression> parameters;
-
 	String method;
 
 	public InvocationExpression(Expression target, String method,
@@ -45,21 +43,15 @@ public class InvocationExpression extends ExpressionCondition {
 	private String paramString() {
 		StringBuffer ret = new StringBuffer();
 		boolean first = true;
-
 		ret.append("(");
-
 		for (Expression e : parameters) {
 			if (!first) {
 				ret.append(", ");
 			}
-
 			ret.append(e);
-
 			first = false;
 		}
-
 		ret.append(")");
-
 		return ret.toString();
 	}
 
