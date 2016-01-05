@@ -10,7 +10,6 @@ import org.eclipse.jdt.core.dom.ArrayType;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.FieldDeclaration;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NameQualifiedType;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
@@ -313,12 +312,6 @@ public class TypeResolver extends ASTVisitor {
 			addBinding(node, frag.getName().getIdentifier(), node.getType());
 		}
 		return true;
-	}
-
-	@Override
-	public boolean visit(MethodDeclaration node) {
-		// TODO Auto-generated method stub
-		return super.visit(node);
 	}
 
 	@Override

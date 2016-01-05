@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
@@ -19,6 +20,7 @@ public class MethodInvocationResolver extends TypeResolver {
 	private Map<String, List<MethodInvokRef>> methodInvoks = new HashMap<String, List<MethodInvokRef>>();
 	private Stack<MethodDeclaration> methodStack = new Stack<MethodDeclaration>();
 	private List<MethodDecl> declaredMethods = new ArrayList<MethodInvocationResolver.MethodDecl>();
+	private MethodInvokRef currentMethodInvokRef;
 	private static final String OBJECT_TYPE = "java.lang.Object";
 
 	public Map<String, List<MethodInvokRef>> getMethodInvoks() {
@@ -27,6 +29,10 @@ public class MethodInvocationResolver extends TypeResolver {
 
 	public List<MethodDecl> getDeclaredMethods() {
 		return declaredMethods;
+	}
+	
+	protected MethodInvokRef getCurrentMethodInvokRef() {
+		return currentMethodInvokRef;
 	}
 
 	@Override
@@ -41,6 +47,28 @@ public class MethodInvocationResolver extends TypeResolver {
 		methodStack.pop();
 		super.endVisit(node);
 	}
+	
+	@SuppressWarnings("rawtypes")
+	@Override
+	public boolean visit(ClassInstanceCreation node) {
+		List args = node.arguments();
+		Map<String, Integer> scopeBindings = getNodeScopes().get(node);
+		List<String> argTypes = translateArgsToTypes(args, scopeBindings);
+		String type = getNameOfType(node.getType());
+		
+		MethodDeclaration currentMethod = methodStack.peek();
+		String currMethodName = currentMethod.getName().toString();
+		List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
+		if (invoks == null) {
+			invoks = new ArrayList<MethodInvocationResolver.MethodInvokRef>();
+			methodInvoks.put(currMethodName, invoks);
+		}
+		MethodInvokRef methodInvokRef = new MethodInvokRef("<init>", type, "", args
+				.size(), node.getStartPosition(), argTypes);
+		invoks.add(methodInvokRef);
+		currentMethodInvokRef = methodInvokRef;
+		return super.visit(node);
+	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
@@ -50,6 +78,7 @@ public class MethodInvocationResolver extends TypeResolver {
 		Expression expression = node.getExpression();
 
 		Map<String, Integer> scopeBindings = getNodeScopes().get(node);
+		String target = getTarget(expression);
 		String targetType = translateTargetToType(expression, scopeBindings);
 		List<String> argTypes = translateArgsToTypes(args, scopeBindings);
 
@@ -60,8 +89,10 @@ public class MethodInvocationResolver extends TypeResolver {
 			invoks = new ArrayList<MethodInvocationResolver.MethodInvokRef>();
 			methodInvoks.put(currMethodName, invoks);
 		}
-		invoks.add(new MethodInvokRef(methodName.toString(), targetType, args
-				.size(), node.getName().getStartPosition(), argTypes));
+		MethodInvokRef methodInvokRef = new MethodInvokRef(methodName.toString(), targetType, target, args
+				.size(), node.getName().getStartPosition(), argTypes);
+		invoks.add(methodInvokRef);
+		currentMethodInvokRef = methodInvokRef;
 		return true;
 	}
 	
@@ -87,14 +118,11 @@ public class MethodInvocationResolver extends TypeResolver {
 				.getStartPosition(), paramTypes));
 	}
 
-	private String translateTargetToType(Expression expression,
+	protected String translateTargetToType(Expression expression,
 			Map<String, Integer> scopeBindings) {
 		String targetType = "";
 		if (expression != null) {
-			String target = expression.toString();
-			if (target.contains("this.")) {
-				target = StringUtils.substringAfter(target, "this.");
-			}
+			String target = getTarget(expression);
 			final Integer variableId = scopeBindings.get(target);
 			if (variableId == null
 					|| !getVariableBinding().containsKey(variableId)) {
@@ -112,8 +140,19 @@ public class MethodInvocationResolver extends TypeResolver {
 		return targetType;
 	}
 
+	private String getTarget(Expression expression) {
+		String target = "";
+		if(expression != null){
+			target = expression.toString();
+			if (target.contains("this.")) {
+				target = StringUtils.substringAfter(target, "this.");
+			}
+		}
+		return target;
+	}
+
 	@SuppressWarnings("rawtypes")
-	private List<String> translateArgsToTypes(List args,
+	protected List<String> translateArgsToTypes(List args,
 			Map<String, Integer> scopeBindings) {
 		List<String> argTypes = new ArrayList<String>();
 		for (Object o : args) {
@@ -175,19 +214,22 @@ public class MethodInvocationResolver extends TypeResolver {
 
 	public static class MethodInvokRef {
 		private String methodName;
+		private String targetType;
 		private String target;
 		private Integer argNum;
 		private Integer location;
 		private List<String> argTypes;
+		
 
-		private MethodInvokRef(String methodName, String target,
+		private MethodInvokRef(String methodName, String targetType, String target,
 				Integer argNum, Integer location, List<String> argTypes) {
 			super();
 			this.methodName = methodName;
-			this.target = target;
+			this.targetType = targetType;
 			this.argNum = argNum;
 			this.location = location;
 			this.argTypes = argTypes;
+			this.target = target;
 		}
 
 		public String getMethodName() {
@@ -198,6 +240,15 @@ public class MethodInvocationResolver extends TypeResolver {
 			this.methodName = methodName;
 		}
 
+		public String getTargetType() {
+			return targetType;
+		}
+
+		public void setTargetType(String targetType) {
+			this.targetType = targetType;
+		}
+
+		
 		public String getTarget() {
 			return target;
 		}
@@ -232,10 +283,11 @@ public class MethodInvocationResolver extends TypeResolver {
 
 		@Override
 		public String toString() {
-			return "MethodInvokRef [methodName=" + methodName + ", target="
-					+ target + ", argNum=" + argNum + ", location=" + location
-					+ ", argTypes=" + argTypes + "]";
+			return "MethodInvokRef [methodName=" + methodName + ", targetType="
+					+ targetType + ", target=" + target + ", argNum=" + argNum
+					+ ", location=" + location + ", argTypes=" + argTypes + "]";
 		}
+
 
 	}
 
