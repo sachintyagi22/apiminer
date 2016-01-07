@@ -70,7 +70,5 @@ public class Node {
 	public String toString() {
 		return "Node [label=" + label + ", type=" + type + ", id=" + id + "]";
 	}
-	
-	
 
 }

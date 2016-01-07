@@ -1,9 +1,5 @@
 package com.kodebeagle.apiminer;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -44,7 +40,8 @@ public class ASTParserTest extends AbstractParseTest {
 			Integer line = unit.getLineNumber(e.getKey());
 			Integer col = unit.getColumnNumber(e.getKey());
 
-			System.out.println(line + " , " + col + " : " + e.getValue());
+			System.out.println("Type @ pos " + line + " , " + col + " : "
+					+ e.getValue());
 		}
 
 		for (Entry<ASTNode, ASTNode> e : resolver.getVariableDependencies()
@@ -81,4 +78,5 @@ public class ASTParserTest extends AbstractParseTest {
 		System.out.println(resolver.getVariableTypes());
 	}
 
+	
 }

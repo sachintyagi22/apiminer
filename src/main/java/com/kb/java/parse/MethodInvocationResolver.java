@@ -73,9 +73,9 @@ public class MethodInvocationResolver extends TypeResolver {
 	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean visit(MethodInvocation node) {
+		Expression expression = node.getExpression();
 		SimpleName methodName = node.getName();
 		List args = node.arguments();
-		Expression expression = node.getExpression();
 
 		Map<String, Integer> scopeBindings = getNodeScopes().get(node);
 		String target = getTarget(expression);
@@ -156,18 +156,23 @@ public class MethodInvocationResolver extends TypeResolver {
 			Map<String, Integer> scopeBindings) {
 		List<String> argTypes = new ArrayList<String>();
 		for (Object o : args) {
-			String name = o.toString();
-			Integer varId = scopeBindings.get(name);
-			if (varId == null) {
-				String staticTypeRef = getImportedNames().get(name);
-				if (staticTypeRef != null) {
-					argTypes.add("<static>" + staticTypeRef);
+			if(o instanceof SimpleName){
+				String name = o.toString();
+				Integer varId = scopeBindings.get(name);
+				if (varId == null) {
+					String staticTypeRef = getImportedNames().get(name);
+					if (staticTypeRef != null) {
+						argTypes.add("<static>" + staticTypeRef);
+					} else {
+						argTypes.add(OBJECT_TYPE);
+					}
 				} else {
-					argTypes.add(OBJECT_TYPE);
+					argTypes.add(getVariableTypes().get(varId));
 				}
 			} else {
-				argTypes.add(getVariableTypes().get(varId));
+				argTypes.add(OBJECT_TYPE);
 			}
+			
 		}
 		return argTypes;
 	}

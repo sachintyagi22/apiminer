@@ -15,11 +15,30 @@ import com.kb.java.parse.JavaASTParser.ParseType;
 
 public class CFGResolverTest extends AbstractParseTest{
 
+	String something(){
+		System.out.println("Something callled...");
+		return "something";
+	}
+	
+	void method(String s){
+		System.out.println("method called..");
+	}
+	
+	CFGResolverTest getInstance(){
+		System.out.println("get instance called...");
+		return this;
+	}
+	
+	
 	@Test
 	public void testOneMethod() {
+		
+		CFGResolverTest test = new CFGResolverTest();
+		test.getInstance().method(something());
+		
 		CFGResolver cfgResolver = new CFGResolver();
 		JavaASTParser pars = new JavaASTParser(true);
-		ASTNode cu = pars.getAST(oneMethod, ParseType.COMPILATION_UNIT);
+		ASTNode cu = pars.getAST(testClass/*oneMethod*/, ParseType.COMPILATION_UNIT);
 		cu.accept(cfgResolver);
 		VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
 			@Override
