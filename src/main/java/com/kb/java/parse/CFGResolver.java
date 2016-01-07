@@ -3,14 +3,15 @@ package com.kb.java.parse;
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import com.kb.java.dom.condition.False;
+import org.eclipse.jdt.core.dom.*;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
 import org.eclipse.jdt.core.dom.ForStatement;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.WhileStatement;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
@@ -25,8 +26,8 @@ public class CFGResolver extends MethodInvocationResolver {
 	private Node current = root;
 	private DirectedGraph<Node, DefaultEdge> baseGraph = new DefaultDirectedGraph<Node, DefaultEdge>(
 			DefaultEdge.class);
-	private DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = new DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>(
-			baseGraph);
+	private DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder =
+			new DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>(baseGraph);
 
 	public CFGResolver() {
 		// Add the root node.
@@ -118,7 +119,22 @@ public class CFGResolver extends MethodInvocationResolver {
 
 	@Override
 	public boolean visit(EnhancedForStatement node) {
-		return super.visit(node);
+		Node enhancedForStart = new Node("Enchanced For Start",Node.EN_FOR_START,id++);
+		Node enhancedForEnd = new Node("Enchanced For End",Node.EN_FOR_END,id++);
+
+		graphBuilder.addEdge(current, enhancedForStart);
+		current = enhancedForStart;
+
+		node.getExpression().accept(this);
+		Statement enchancedForBody = node.getBody();
+
+		if(enchancedForBody != null){
+			current = enhancedForStart;
+			enchancedForBody.accept(this);
+			graphBuilder.addEdge(current,enhancedForEnd);
+		}
+		current = enhancedForEnd;
+		return false;
 	}
 
 	public boolean endvisit(EnhancedForStatement node) {
@@ -127,10 +143,49 @@ public class CFGResolver extends MethodInvocationResolver {
 
 	@Override
 	public boolean visit(ForStatement node) {
-		return super.visit(node);
+		Node forStart = new Node("For Start",Node.FOR_START,id++);
+		Node forEnd = new Node("For End",Node.FOR_END,id++);
+
+		graphBuilder.addEdge(current, forStart);
+		current = forStart;
+
+		node.getExpression().accept(this);
+		Statement forBody = node.getBody();
+
+		if(forBody != null){
+			current = forStart;
+			forBody.accept(this);
+			graphBuilder.addEdge(current,forEnd);
+		}
+		current = forEnd;
+		return false;
 	}
 	
 	public boolean endvisit(ForStatement node) {
+		return super.visit(node);
+	}
+
+	@Override
+	public boolean visit(WhileStatement node) {
+		Node whileStart = new Node("While Start",Node.WHILE_START,id++);
+		Node whileEnd = new Node("While End",Node.WHILE_END,id++);
+
+		graphBuilder.addEdge(current, whileStart);
+		current = whileStart;
+
+		node.getExpression().accept(this);
+		Statement whileBody = node.getBody();
+
+		if(whileBody != null){
+			current = whileStart;
+			whileBody.accept(this);
+			graphBuilder.addEdge(current,whileEnd);
+		}
+		current = whileEnd;
+		return false;
+	}
+
+	public boolean endvisit(WhileStatement node) {
 		return super.visit(node);
 	}
 
