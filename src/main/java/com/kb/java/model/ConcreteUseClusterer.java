@@ -1,14 +1,7 @@
 package com.kb.java.model;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
 
-import com.kb.java.graph.CFNode;
-import com.kb.ml.KMedoids;
-import com.kb.ml.KendallsTauDistanceMetric;
-
-public class ConcreteUseClusterer {
+public class ConcreteUseClusterer {/*
 
 	public static List<List<ConcreteUse>> cluster(List<ConcreteUse> concreteUses) {
 		
@@ -26,4 +19,4 @@ public class ConcreteUseClusterer {
 		return new LinkedList<>();
 	}
 
-}
+*/}
