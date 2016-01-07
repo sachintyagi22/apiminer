@@ -7,10 +7,14 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.ParenthesizedExpression;
+import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
@@ -30,7 +34,7 @@ public class MethodInvocationResolver extends TypeResolver {
 	public List<MethodDecl> getDeclaredMethods() {
 		return declaredMethods;
 	}
-	
+
 	protected MethodInvokRef getCurrentMethodInvokRef() {
 		return currentMethodInvokRef;
 	}
@@ -47,7 +51,7 @@ public class MethodInvocationResolver extends TypeResolver {
 		methodStack.pop();
 		super.endVisit(node);
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean visit(ClassInstanceCreation node) {
@@ -55,7 +59,7 @@ public class MethodInvocationResolver extends TypeResolver {
 		Map<String, Integer> scopeBindings = getNodeScopes().get(node);
 		List<String> argTypes = translateArgsToTypes(args, scopeBindings);
 		String type = getNameOfType(node.getType());
-		
+
 		MethodDeclaration currentMethod = methodStack.peek();
 		String currMethodName = currentMethod.getName().toString();
 		List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
@@ -63,8 +67,8 @@ public class MethodInvocationResolver extends TypeResolver {
 			invoks = new ArrayList<MethodInvocationResolver.MethodInvokRef>();
 			methodInvoks.put(currMethodName, invoks);
 		}
-		MethodInvokRef methodInvokRef = new MethodInvokRef("<init>", type, "", args
-				.size(), node.getStartPosition(), argTypes);
+		MethodInvokRef methodInvokRef = new MethodInvokRef("<init>", type, "",
+				args.size(), node.getStartPosition(), argTypes);
 		invoks.add(methodInvokRef);
 		currentMethodInvokRef = methodInvokRef;
 		return super.visit(node);
@@ -89,13 +93,14 @@ public class MethodInvocationResolver extends TypeResolver {
 			invoks = new ArrayList<MethodInvocationResolver.MethodInvokRef>();
 			methodInvoks.put(currMethodName, invoks);
 		}
-		MethodInvokRef methodInvokRef = new MethodInvokRef(methodName.toString(), targetType, target, args
-				.size(), node.getName().getStartPosition(), argTypes);
+		MethodInvokRef methodInvokRef = new MethodInvokRef(
+				methodName.toString(), targetType, target, args.size(), node
+						.getName().getStartPosition(), argTypes);
 		invoks.add(methodInvokRef);
 		currentMethodInvokRef = methodInvokRef;
 		return true;
 	}
-	
+
 	@SuppressWarnings("rawtypes")
 	private void addMethodDecl(MethodDeclaration node) {
 		SimpleName nameNode = node.getName();
@@ -119,7 +124,7 @@ public class MethodInvocationResolver extends TypeResolver {
 	}
 
 	protected String translateTargetToType(Expression expression,
-			Map<String, Integer> scopeBindings) {
+			final Map<String, Integer> scopeBindings) {
 		String targetType = "";
 		if (expression != null) {
 			String target = getTarget(expression);
@@ -130,11 +135,33 @@ public class MethodInvocationResolver extends TypeResolver {
 				String staticTypeRef = getImportedNames().get(target);
 				if (staticTypeRef != null) {
 					targetType = "<static>" + staticTypeRef;
-				} else {
-					System.out.println("Ignoring target " + target);
 				}
 			} else {
 				targetType = getVariableTypes().get(variableId);
+			}
+
+			if (StringUtils.isEmpty(targetType)) {
+				if (expression instanceof QualifiedName) {
+					targetType = expression.toString();
+				} else if (expression instanceof MethodInvocation) {
+					targetType = "UNKNOWN";
+				} else if (expression instanceof ParenthesizedExpression) {
+					final StringBuilder sb = new StringBuilder();
+					((ParenthesizedExpression)expression).accept(new ASTVisitor() {
+						@Override
+						public boolean visit(CastExpression node) {
+							sb.append(translateTargetToType(node.getExpression(), scopeBindings));
+							return super.visit(node);
+						}
+					});
+					targetType = sb.toString();
+				}
+			}
+
+			if (StringUtils.isEmpty(targetType)) {
+				// If still empty
+				System.err.println("Can't determine type for " + expression
+						+ expression.getClass());
 			}
 		}
 		return targetType;
@@ -142,10 +169,12 @@ public class MethodInvocationResolver extends TypeResolver {
 
 	private String getTarget(Expression expression) {
 		String target = "";
-		if(expression != null){
-			target = expression.toString();
-			if (target.contains("this.")) {
-				target = StringUtils.substringAfter(target, "this.");
+		if (expression != null) {
+			if (expression instanceof SimpleName) {
+				target = expression.toString();
+				if (target.contains("this.")) {
+					target = StringUtils.substringAfter(target, "this.");
+				}
 			}
 		}
 		return target;
@@ -156,7 +185,7 @@ public class MethodInvocationResolver extends TypeResolver {
 			Map<String, Integer> scopeBindings) {
 		List<String> argTypes = new ArrayList<String>();
 		for (Object o : args) {
-			if(o instanceof SimpleName){
+			if (o instanceof SimpleName) {
 				String name = o.toString();
 				Integer varId = scopeBindings.get(name);
 				if (varId == null) {
@@ -172,7 +201,7 @@ public class MethodInvocationResolver extends TypeResolver {
 			} else {
 				argTypes.add(OBJECT_TYPE);
 			}
-			
+
 		}
 		return argTypes;
 	}
@@ -224,10 +253,10 @@ public class MethodInvocationResolver extends TypeResolver {
 		private Integer argNum;
 		private Integer location;
 		private List<String> argTypes;
-		
 
-		private MethodInvokRef(String methodName, String targetType, String target,
-				Integer argNum, Integer location, List<String> argTypes) {
+		private MethodInvokRef(String methodName, String targetType,
+				String target, Integer argNum, Integer location,
+				List<String> argTypes) {
 			super();
 			this.methodName = methodName;
 			this.targetType = targetType;
@@ -253,7 +282,6 @@ public class MethodInvocationResolver extends TypeResolver {
 			this.targetType = targetType;
 		}
 
-		
 		public String getTarget() {
 			return target;
 		}
@@ -292,7 +320,6 @@ public class MethodInvocationResolver extends TypeResolver {
 					+ targetType + ", target=" + target + ", argNum=" + argNum
 					+ ", location=" + location + ", argTypes=" + argTypes + "]";
 		}
-
 
 	}
 

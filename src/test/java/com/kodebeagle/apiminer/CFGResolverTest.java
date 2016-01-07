@@ -15,26 +15,8 @@ import com.kb.java.parse.JavaASTParser.ParseType;
 
 public class CFGResolverTest extends AbstractParseTest{
 
-	String something(){
-		System.out.println("Something callled...");
-		return "something";
-	}
-	
-	void method(String s){
-		System.out.println("method called..");
-	}
-	
-	CFGResolverTest getInstance(){
-		System.out.println("get instance called...");
-		return this;
-	}
-	
-	
 	@Test
 	public void testOneMethod() {
-		
-		CFGResolverTest test = new CFGResolverTest();
-		test.getInstance().method(something());
 		
 		CFGResolver cfgResolver = new CFGResolver();
 		JavaASTParser pars = new JavaASTParser(true);
@@ -55,6 +37,6 @@ public class CFGResolverTest extends AbstractParseTest{
 		};
 		DOTExporter<Node, DefaultEdge> exporter = new DOTExporter<Node, DefaultEdge>(vertexIdProvider, vertexNameProvider , null);
 		
-		exporter.export(new OutputStreamWriter(System.out), cfgResolver.getBaseGraph());
+		exporter.export(new OutputStreamWriter(System.out), cfgResolver.getMethodCFGs().get(0));
 	}
 }

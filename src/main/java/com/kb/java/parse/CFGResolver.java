@@ -1,5 +1,6 @@
 package com.kb.java.parse;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,46 +16,64 @@ import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.WhileStatement;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.graph.builder.DirectedGraphBuilder;
 
+import com.kb.java.graph.ControlStructureNode;
+import com.kb.java.graph.ControlStructureNode.ControlStructType;
+import com.kb.java.graph.InvocationNode;
+import com.kb.java.graph.LabelNode;
 import com.kb.java.graph.Node;
 
 public class CFGResolver extends MethodInvocationResolver {
 
-	private int id = 0;
-	private Node root = new Node("ROOT", 0, id++);
-	private Stack<Node> previous = new Stack<Node>();
-	private Node current = root;
+	private int nodeId = 0;
+	private Node currentNode;
+	private Stack<Node> nodeStack = new Stack<Node>();
+	private Stack<DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>> gbStack = new Stack<DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>>();
+	private List<DirectedGraph<Node, DefaultEdge>> methodCFGs = new ArrayList<DirectedGraph<Node, DefaultEdge>>();
 	private Map<ASTNode, Node> nodeMap = new HashMap<ASTNode, Node>();
-	private DirectedGraph<Node, DefaultEdge> baseGraph = new DefaultDirectedGraph<Node, DefaultEdge>(
-			DefaultEdge.class);
-	private DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = new DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>(
-			baseGraph);
+	private int minVertices = 2;
 
 	public CFGResolver() {
-		// Add the root node.
-		graphBuilder.addVertex(root);
+	}
+
+	public CFGResolver(Integer minVertices) {
+		this.minVertices = minVertices;
 	}
 
 	@Override
 	public boolean visit(MethodDeclaration node) {
+		DirectedGraph<Node, DefaultEdge> currentGraph = new DefaultDirectedGraph<Node, DefaultEdge>(
+				DefaultEdge.class);
+		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = new DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>(
+				currentGraph);
+		gbStack.push(graphBuilder);
+		Node root = new LabelNode(nodeId++, "ROOT");
+		graphBuilder.addVertex(root);
 		// For each method create a new branch from root
 		// current = root;
-		if (current != root) {
+		if (currentNode != root) {
 			// In case there's method decl inside method decl
-			previous.push(current);
+			nodeStack.push(currentNode);
 		}
-		current = root;
+		currentNode = root;
 		return super.visit(node);
 	}
 
 	@Override
 	public void endVisit(MethodDeclaration node) {
-		if (!previous.isEmpty()) {
-			current = previous.pop();
+		if (!nodeStack.isEmpty()) {
+			currentNode = nodeStack.pop();
+		}
+		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = gbStack
+				.pop();
+		DirectedGraph<Node, DefaultEdge> graph = graphBuilder.build();
+		if (graph.vertexSet() != null && graph.vertexSet().size() > minVertices) {
+			methodCFGs.add(graph);
 		}
 		super.endVisit(node);
 	}
@@ -80,8 +99,8 @@ public class CFGResolver extends MethodInvocationResolver {
 		}
 
 		Node next = createNode(node, currMethInvok);
-		addEdge(current, next);
-		current = next;
+		addEdge(currentNode, next);
+		currentNode = next;
 		return false;
 	}
 
@@ -107,8 +126,8 @@ public class CFGResolver extends MethodInvocationResolver {
 		}
 
 		Node next = createNode(node, currMethInvok);
-		addEdge(current, next);
-		current = next;
+		addEdge(currentNode, next);
+		currentNode = next;
 
 		Map<String, Integer> scope = getNodeScopes().get(node);
 		Map<Integer, List<ASTNode>> varBindings = getVariableBinding();
@@ -120,7 +139,7 @@ public class CFGResolver extends MethodInvocationResolver {
 					ASTNode prev = extractMethodInvocationNode(p);
 					Node prevNode = nodeMap.get(prev);
 					if (prevNode != null && prev != node) {
-						addEdge(prevNode, current);
+						addEdge(prevNode, currentNode);
 					}
 				}
 			}
@@ -130,49 +149,35 @@ public class CFGResolver extends MethodInvocationResolver {
 		return false;
 	}
 
-	private String getMethodLabel(MethodInvokRef m) {
-		StringBuffer sb = new StringBuffer(m.getTargetType());
-		sb.append(".").append(m.getMethodName()).append("#")
-				.append(m.getArgNum());
-		return sb.toString();
-	}
-
 	@Override
 	public boolean visit(IfStatement node) {
-		Node ifStart = new Node("IF", Node.IF_START, id++);
-		Node ifEnd = new Node("IF-END", Node.IF_END, id++);
-		addEdge(current, ifStart);
-		current = ifStart;
+		Node ifStart = new ControlStructureNode(nodeId++, true,
+				ControlStructType.IF);
+		Node ifEnd = new ControlStructureNode(nodeId++, false,
+				ControlStructType.IF);
+		addEdge(currentNode, ifStart);
+		currentNode = ifStart;
 
 		node.getExpression().accept(this);
 
 		Statement thenStatement = node.getThenStatement();
 
 		if (thenStatement != null) {
-			current = ifStart;
+			currentNode = ifStart;
 			thenStatement.accept(this);
-			addEdge(current, ifEnd);
+			addEdge(currentNode, ifEnd);
 		}
 
 		Statement elseStatement = node.getElseStatement();
 		if (elseStatement != null) {
-			current = ifStart;
+			currentNode = ifStart;
 			elseStatement.accept(this);
-			addEdge(current, ifEnd);
+			addEdge(currentNode, ifEnd);
 		}
 
-		current = ifEnd;
+		currentNode = ifEnd;
 		// Don't go inside again. We already done that above.
 		return false;
-	}
-
-	private void addEdge(Node curr, Node next) {
-		if (curr.equals(next)) {
-			System.out.println("here");
-		}
-		if (curr != next) {
-			graphBuilder.addEdge(curr, next);
-		}
 	}
 
 	@Override
@@ -182,29 +187,71 @@ public class CFGResolver extends MethodInvocationResolver {
 
 	@Override
 	public boolean visit(EnhancedForStatement node) {
-		return super.visit(node);
+		super.visit(node);
+		visitLoop(node.getExpression(), node.getBody(), "For Start", "For End");
+		return false;
 	}
 
-	public boolean endvisit(EnhancedForStatement node) {
-		return super.visit(node);
+	@Override
+	public boolean visit(WhileStatement node) {
+		super.visit(node);
+		visitLoop(node.getExpression(), node.getBody(), "While Start",
+				"while End");
+		return false;
+
 	}
 
 	@Override
 	public boolean visit(ForStatement node) {
-		return super.visit(node);
+		super.visit(node);
+		visitLoop(node.getExpression(), node.getBody(), "For Start", "For End");
+		return false;
 	}
 
-	public boolean endvisit(ForStatement node) {
-		return super.visit(node);
+	public List<DirectedGraph<Node, DefaultEdge>> getMethodCFGs() {
+		return methodCFGs;
 	}
 
-	public DirectedGraph<Node, DefaultEdge> getBaseGraph() {
-		return baseGraph;
+	public int getMinVertices() {
+		return minVertices;
+	}
+
+	public void setMinVertices(int minVertices) {
+		this.minVertices = minVertices;
+	}
+
+	private void visitLoop(Expression expression, Statement loopBody,
+			String startLabel, String endLabel) {
+		Node startNode = new ControlStructureNode(nodeId++, true,
+				ControlStructType.FOR);
+		Node endNode = new ControlStructureNode(nodeId++, false,
+				ControlStructType.FOR);
+		addEdge(currentNode, startNode);
+		currentNode = startNode;
+
+		if (expression != null) {
+			expression.accept(this);
+		}
+
+		if (loopBody != null) {
+			currentNode = startNode;
+			loopBody.accept(this);
+			addEdge(currentNode, endNode);
+		}
+		currentNode = endNode;
+	}
+
+	private void addEdge(Node curr, Node next) {
+		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = gbStack
+				.peek();
+		if (curr != next) {
+			graphBuilder.addEdge(curr, next);
+		}
 	}
 
 	private Node createNode(ASTNode node, MethodInvokRef currMethInvok) {
-		Node next = new Node(getMethodLabel(currMethInvok), Node.METHOD_INVOK,
-				id++);
+		Node next = new InvocationNode(nodeId++, currMethInvok.getTargetType(),
+				currMethInvok.getMethodName(), currMethInvok.getArgTypes());
 		nodeMap.put(node, next);
 		return next;
 	}

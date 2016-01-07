@@ -1,8 +1,11 @@
 package com.kb.java.graph;
 
-public class Node {
+public interface Node {
+	
+	String getLabel();
+	int getId();
 
-	public static final int ROOT = 0;
+	/*public static final int ROOT = 0;
 	public static final int METHOD_INVOK = 1;
 	public static final int IF_START = 2;
 	public static final int IF_END = 3;
@@ -69,6 +72,6 @@ public class Node {
 	@Override
 	public String toString() {
 		return "Node [label=" + label + ", type=" + type + ", id=" + id + "]";
-	}
+	}*/
 
 }
