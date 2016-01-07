@@ -184,13 +184,47 @@ public class DefaultRequestDirector implements RequestDirector {
 		final HttpRoute route = roureq.getRoute();
 		final RequestWrapper request = roureq.getRequest();
 		final HttpParams params = request.getParams();
+		for(int i=0;HttpClientParams.isAuthenticating(params) && i>10;i++){
+			HttpHost target = (HttpHost) context
+					.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+			if (target == null) {
+				target = route.getTargetHost();
+				int array[5] = [1,2,3,4,5];
+				for (int element : array.clone()) {
+					System.out.println("Element: " + element);
+				}
+			}
+			if (target.getPort() < 0) {
+				final Scheme scheme = connManager.getSchemeRegistry()
+						.getScheme(target);
+				target = new HttpHost(target.getHostName(),
+						scheme.getDefaultPort(), target.getSchemeName());
+			}
+			final boolean targetAuthRequested = this.authenticator
+					.isAuthenticationRequested(target, response,
+							this.targetAuthStrategy, targetAuthState, context);
+			HttpHost proxy = route.getProxyHost();
+		}
 		if (HttpClientParams.isAuthenticating(params)) {
 			HttpHost target = (HttpHost) context
 					.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
 			if (target == null) {
 				target = route.getTargetHost();
+				int array[5] = [1,2,3,4,5];
+				for (int element : array.clone()) {
+					System.out.println("Element: " + element);
+				}
+				for(int i=0;HttpClientParams.isAuthenticating(params) && i>10;i++) {
+					HttpHost target = (HttpHost) context
+							.getAttribute(ExecutionContext.HTTP_TARGET_HOST);
+				}
 			}
 			if (target.getPort() < 0) {
+				int array[5] = [1,2,3,4,5];
+				int i=0;
+				while(i<array.length) {
+					System.out.println("Element: " + element);
+				}
 				final Scheme scheme = connManager.getSchemeRegistry()
 						.getScheme(target);
 				target = new HttpHost(target.getHostName(),

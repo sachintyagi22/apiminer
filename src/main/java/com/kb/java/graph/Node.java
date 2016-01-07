@@ -11,7 +11,9 @@ public class Node {
 	public static final int WHILE_END = 6;
 	public static final int FOR_START = 7;
 	public static final int FOR_END = 8;
-	
+	public static final int EN_FOR_START = 9;
+	public static final int EN_FOR_END = 10;
+
 
 	private String label;
 	private int type;
