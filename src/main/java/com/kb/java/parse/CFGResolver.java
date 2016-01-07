@@ -52,7 +52,9 @@ public class CFGResolver extends MethodInvocationResolver {
 		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = new DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>(
 				currentGraph);
 		gbStack.push(graphBuilder);
-		Node root = new LabelNode(nodeId++, "ROOT");
+		String methodName = node.getName().toString();
+		String label = "ROOT:" + methodName + "()#" + node.parameters().size();
+		Node root = new LabelNode(nodeId++, label);
 		graphBuilder.addVertex(root);
 		// For each method create a new branch from root
 		// current = root;

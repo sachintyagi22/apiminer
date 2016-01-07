@@ -1,4 +1,4 @@
-package com.kodebeagle.apiminer;
+package com.kb.apiminer;
 
 import java.io.OutputStreamWriter;
 
