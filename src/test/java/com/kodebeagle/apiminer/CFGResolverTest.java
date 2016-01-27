@@ -61,8 +61,9 @@ public class CFGResolverTest extends AbstractParseTest{
 						StringWriter stringWriter = new StringWriter();
 						exporter.export(stringWriter, graphs);
 
-						if(stringWriter.toString().contains("BufferedReader")){
-							dotFileWriter.append(stringWriter.toString()+"\n\n");
+						if(stringWriter.getBuffer().toString().contains("BufferedReader")){
+							dotFileWriter.append(stringWriter.getBuffer().toString()+"\n\n");
+							dotFileWriter.flush();
 						}
 
 						stringWriter.close();
