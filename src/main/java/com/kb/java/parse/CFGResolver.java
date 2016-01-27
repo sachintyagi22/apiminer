@@ -52,7 +52,9 @@ public class CFGResolver extends MethodInvocationResolver {
 		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = new DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>(
 				currentGraph);
 		gbStack.push(graphBuilder);
-		Node root = new LabelNode(nodeId++, "ROOT");
+		String methodName = node.getName().toString();
+		String label = "ROOT:" + methodName + "()#" + node.parameters().size();
+		Node root = new LabelNode(nodeId++, label);
 		graphBuilder.addVertex(root);
 		// For each method create a new branch from root
 		// current = root;
@@ -131,6 +133,10 @@ public class CFGResolver extends MethodInvocationResolver {
 
 		Map<String, Integer> scope = getNodeScopes().get(node);
 		Map<Integer, List<ASTNode>> varBindings = getVariableBinding();
+
+		if(currMethInvok == null)
+			return false;
+
 		Integer bindingId = scope.get(currMethInvok.getTarget());
 		if (bindingId != null) {
 			List<ASTNode> parentNodes = varBindings.get(bindingId);
@@ -242,6 +248,8 @@ public class CFGResolver extends MethodInvocationResolver {
 	}
 
 	private void addEdge(Node curr, Node next) {
+		if(gbStack.empty())
+			return;
 		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = gbStack
 				.peek();
 		if (curr != next) {
@@ -250,6 +258,8 @@ public class CFGResolver extends MethodInvocationResolver {
 	}
 
 	private Node createNode(ASTNode node, MethodInvokRef currMethInvok) {
+		if (currMethInvok == null)
+			return null;
 		Node next = new InvocationNode(nodeId++, currMethInvok.getTargetType(),
 				currMethInvok.getMethodName(), currMethInvok.getArgTypes());
 		nodeMap.put(node, next);

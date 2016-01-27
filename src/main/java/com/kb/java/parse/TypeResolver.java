@@ -163,6 +163,9 @@ public class TypeResolver extends ASTVisitor {
 	 */
 	protected String getNameOfType(final Type type) {
 		final String nameOfType;
+		if(type == null)
+			return "";
+
 		if (type.isPrimitiveType()) {
 			nameOfType = type.toString();
 		} else if (type.isParameterizedType()) {

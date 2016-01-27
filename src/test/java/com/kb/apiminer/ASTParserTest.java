@@ -1,4 +1,4 @@
-package com.kodebeagle.apiminer;
+package com.kb.apiminer;
 
 import java.util.List;
 import java.util.Map;
@@ -8,7 +8,6 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.junit.Test;
 
-import com.kb.java.dom.expression.UnknownExpressionException;
 import com.kb.java.parse.JavaASTParser;
 import com.kb.java.parse.JavaASTParser.ParseType;
 import com.kb.java.parse.MethodInvocationResolver.MethodDecl;
@@ -18,7 +17,7 @@ import com.kb.java.parse.SingleClassBindingResolver;
 public class ASTParserTest extends AbstractParseTest {
 
 	@Test
-	public void testOneMethod() throws UnknownExpressionException {
+	public void testOneMethod() {
 		JavaASTParser pars = new JavaASTParser(true);
 		ASTNode cu = pars.getAST(oneMethod, ParseType.COMPILATION_UNIT);
 		CompilationUnit unit = (CompilationUnit) cu;
