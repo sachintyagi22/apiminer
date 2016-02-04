@@ -3,12 +3,12 @@ package com.kodebeagle.apiminer;
 import java.io.*;
 import java.util.List;
 
+import com.kb.java.graph.DirectedEdge;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.Graph;
 import org.jgrapht.ext.DOTExporter;
 import org.jgrapht.ext.VertexNameProvider;
-import org.jgrapht.graph.DefaultEdge;
 import org.junit.Test;
 
 import com.kb.java.graph.Node;
@@ -53,13 +53,15 @@ public class CFGResolverTest extends AbstractParseTest{
 							return String.valueOf(vertex.getId());
 						}
 					};
-					DOTExporter<Node, DefaultEdge> exporter = new DOTExporter<Node, DefaultEdge>(vertexIdProvider, vertexNameProvider , null);
+					DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<Node, DirectedEdge>(vertexIdProvider, vertexNameProvider , null);
 					//exporter.export(new OutputStreamWriter(System.out), cfgResolver.getMethodCFGs().get(0));
 
 					FileWriter dotFileWriter = new FileWriter("diagraph.dot",true);
-					for(DirectedGraph<Node,DefaultEdge> graphs : cfgResolver.getMethodCFGs()) {
+					for(DirectedGraph<Node,DirectedEdge> graph : cfgResolver.getMethodCFGs()) {
 						StringWriter stringWriter = new StringWriter();
-						exporter.export(stringWriter, graphs);
+						graph.vertexSet();
+						graph.edgeSet();
+						exporter.export(stringWriter, graph);
 
 						if(stringWriter.getBuffer().toString().contains("BufferedReader")){
 							dotFileWriter.append(stringWriter.getBuffer().toString()+"\n\n");
