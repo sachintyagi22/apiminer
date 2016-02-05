@@ -21,7 +21,7 @@ public class CFGResolverTest extends AbstractParseTest{
 	@Test
 	public void testOneMethod() {
 
-		File f = new File("./sourceJavaFiles");
+		File f = new File("./fileniochannels");
 		File[] listOfSourceFiles = f.listFiles();
 
 
@@ -56,14 +56,14 @@ public class CFGResolverTest extends AbstractParseTest{
 					DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<Node, DirectedEdge>(vertexIdProvider, vertexNameProvider , null);
 					//exporter.export(new OutputStreamWriter(System.out), cfgResolver.getMethodCFGs().get(0));
 
-					FileWriter dotFileWriter = new FileWriter("diagraph.dot",true);
+					FileWriter dotFileWriter = new FileWriter("diagraph2.dot",true);
 					for(DirectedGraph<Node,DirectedEdge> graph : cfgResolver.getMethodCFGs()) {
 						StringWriter stringWriter = new StringWriter();
 						graph.vertexSet();
 						graph.edgeSet();
 						exporter.export(stringWriter, graph);
 
-						if(stringWriter.getBuffer().toString().contains("BufferedReader")){
+						if(stringWriter.getBuffer().toString().contains("FileChannel")){
 							dotFileWriter.append(stringWriter.getBuffer().toString()+"\n\n");
 							dotFileWriter.flush();
 						}

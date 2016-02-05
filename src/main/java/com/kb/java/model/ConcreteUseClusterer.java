@@ -22,6 +22,8 @@ import java.util.List;
 
 public class ConcreteUseClusterer {
 
+    public static final String FILE_CHANNEL = "FileChannel";
+
     public static List<List<ConcreteUse>> cluster(List<ConcreteUse> concreteUses) {
 
 		/*KMedoids<List<CFNode>> kmedoids = new KMedoids<List<CFNode>>(new KendallsTauDistanceMetric<CFNode>(), 2);
@@ -36,7 +38,7 @@ public class ConcreteUseClusterer {
 		kmedoids.printClusters(instances);
 		// TODO Auto-generated method stub
 		return new LinkedList<>();*/
-        KMedoids<DirectedGraph<Node, DirectedEdge>> kMedoids = new KMedoids<>(new DAGClusterMatric(), 2);
+        KMedoids<DirectedGraph<Node, DirectedEdge>> kMedoids = new KMedoids<>(new DAGClusterMatric(), 11);
 
         List<DirectedGraph<Node, DirectedEdge>> instances = new ArrayList<>();
         File f = new File("./fileniochannels");
@@ -67,7 +69,7 @@ public class ConcreteUseClusterer {
                                     Iterable nodes = Iterables.filter(graph.vertexSet(), new Predicate<Node>() {
                                         @Override
                                         public boolean apply(Node node) {
-                                            return node.getLabel().contains("FileChannel");
+                                            return node.getLabel().contains(FILE_CHANNEL);
                                         }
                                     });
                                     return Lists.newArrayList(nodes).size() > 0;
@@ -110,26 +112,26 @@ public class ConcreteUseClusterer {
         DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider , null);
 
         try{
-            File clusterFile = new File("cluster.dot");
+            File clusterFile = new File("cluster11.dot");
             if(clusterFile.exists()){
                 clusterFile.delete();
             }
 
             int clusterCount =0;
             for (List<DirectedGraph<Node,DirectedEdge>> cluster : clusters) {
-                FileWriter dotFileWriter = new FileWriter("cluster.dot",true);
+                FileWriter dotFileWriter = new FileWriter("cluster11.dot",true);
 
-                dotFileWriter.append("============================"+(++clusterCount)+"==================================\n");
+                dotFileWriter.append("============================" + (++clusterCount) + "==================================\n");
                 for(DirectedGraph<Node,DirectedEdge> graph : cluster) {
                     StringWriter stringWriter = new StringWriter();
                     graph.vertexSet();
                     graph.edgeSet();
                     exporter.export(stringWriter, graph);
 
-                    if(stringWriter.getBuffer().toString().contains("BufferedReader")){
-                        dotFileWriter.append(stringWriter.getBuffer().toString()+"\n\n");
-                        dotFileWriter.flush();
-                    }
+//                    if(stringWriter.getBuffer().toString().contains(FILE_CHANNEL)){
+                    dotFileWriter.append(stringWriter.getBuffer().toString()+"\n\n");
+                    dotFileWriter.flush();
+//                    }
 
                     stringWriter.close();
                 }
