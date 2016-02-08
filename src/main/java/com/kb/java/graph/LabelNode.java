@@ -26,4 +26,5 @@ public class LabelNode implements Node{
 		this.label = label;
 	}
 
+
 }

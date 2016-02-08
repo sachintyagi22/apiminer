@@ -11,10 +11,10 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.ext.DOTExporter;
 import org.jgrapht.ext.VertexNameProvider;
-import org.jgrapht.graph.DefaultEdge;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.kb.java.graph.DirectedEdge;
 import com.kb.java.graph.Node;
 import com.kb.java.parse.CFGResolver;
 import com.kb.java.parse.JavaASTParser;
@@ -56,12 +56,12 @@ public class CFGResolverTest extends AbstractParseTest{
 							return String.valueOf(vertex.getId());
 						}
 					};
-					DOTExporter<Node, DefaultEdge> exporter = new DOTExporter<Node, DefaultEdge>(vertexIdProvider, vertexNameProvider , null);
+					DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<Node, DirectedEdge>(vertexIdProvider, vertexNameProvider , null);
 					//exporter.export(new OutputStreamWriter(System.out), cfgResolver.getMethodCFGs().get(0));
 
 					FileWriter dotFileWriter = new FileWriter("diagraph.dot",true);
 					
-					for(DirectedGraph<Node,DefaultEdge> graph : cfgResolver.getMethodCFGs()) {
+					for(DirectedGraph<Node,DirectedEdge> graph : cfgResolver.getMethodCFGs()) {
 						validateGraph(graph);
 						StringWriter stringWriter = new StringWriter();
 						exporter.export(stringWriter, graph);
@@ -86,9 +86,9 @@ public class CFGResolverTest extends AbstractParseTest{
 		}
 	}
 
-	private void validateGraph(DirectedGraph<Node, DefaultEdge> graph) {
-		Set<DefaultEdge> edgeset = graph.edgeSet();
-		for(DefaultEdge e : edgeset){
+	private void validateGraph(DirectedGraph<Node, DirectedEdge> graph) {
+		Set<DirectedEdge> edgeset = graph.edgeSet();
+		for(DirectedEdge e : edgeset){
 			Node src = graph.getEdgeSource(e);
 			Node tgt = graph.getEdgeTarget(e);
 			if(src.getLabel().equals("START IF")){

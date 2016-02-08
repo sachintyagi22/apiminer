@@ -26,24 +26,19 @@ public class KMedoids<T> {
 	}
 
 	public void buildClusterer(List<T> trainingSet) {
+
 		// 1. Initialize: randomly select k of the n data points as the mediods
 		config = new Configuration<T>(trainingSet, k, dist);
 
-		// System.out.println("initial:\n" + config);
-
 		// 2. Associate each data point to the closest medoid.
-		// implicit
-
-		int iter_count = 0;
-
+		int iterCount = 0;
 		boolean change = true;
 
 		while (change) {
-			iter_count++;
+			iterCount++;
+			System.out.println("[KMedoids] iter #" + iterCount);
 
-			System.out.println("[KMedoids] iter #" + iter_count);
-
-			if (iter_count >= MAXITERATIONS) {
+			if (iterCount >= MAXITERATIONS) {
 				break;
 			}
 
@@ -53,19 +48,17 @@ public class KMedoids<T> {
 			for (T m : config.getMedoids()) {
 				// 1. For each non-medoid data point o
 				for (T o : config.getRest()) {
-					// 1. Swap m and o and compute the total cost of the
-					// configuration
-					Configuration<T> c_prime = config.swap(m, o);
+					// 1. Swap m and o and compute the total cost of the configuration
+					Configuration<T> cPrime = config.swap(m, o);
 
 					// 4. Select the configuration with the lowest cost.
-					if (c_prime.computeCost() < config.computeCost()) {
-						config = c_prime;
+					if (cPrime.computeCost() < config.computeCost()) {
+						config = cPrime;
 						change = true;
 					}
-
-					// 5. repeat steps 2 to 5 until there is no change in the
-					// medoid.
+					// 5. repeat steps 2 to 5 until there is no change in the medoid.
 				}
+				
 			}
 		}
 	}
@@ -188,6 +181,8 @@ class Configuration<T> {
 		if (!medoids.contains(m) || !rest.contains(o))
 			return this;
 
+		double total = 0;
+		
 		Configuration<T> c = new Configuration<T>();
 		c.dist = dist;
 		c.medoids = new LinkedList<T>();
@@ -198,16 +193,23 @@ class Configuration<T> {
 				c.medoids.add(med);
 			}
 		}
-
+		c.medoids.add(o);
+		
 		for (T obj : rest) {
 			if (!obj.equals(o) && !obj.equals(m)) {
 				c.rest.add(obj);
+				//Compute cost while constructing only
+				T md = c.getMedoidFor(obj);
+				total += dist.getDistance(obj, md);
 			}
 		}
 
-		c.medoids.add(o);
+		
 		c.rest.add(m);
+		T md = c.getMedoidFor(m);
+		total += dist.getDistance(m, md);
 
+		c.cost = total;
 		return c;
 	}
 
