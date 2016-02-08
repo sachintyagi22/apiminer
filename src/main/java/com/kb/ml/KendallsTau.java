@@ -31,12 +31,10 @@ public class KendallsTau {
 			return 0;
 
 		int count = 0;
-		/*int[] map = null;
-		try{
-			map = makeBinMap(r1.size(), numBins);
-		}catch(Exception e){
-			e.printStackTrace();
-		}*/
+		/*
+		 * int[] map = null; try{ map = makeBinMap(r1.size(), numBins);
+		 * }catch(Exception e){ e.printStackTrace(); }
+		 */
 
 		// printBinMap( map );
 
@@ -47,8 +45,10 @@ public class KendallsTau {
 					continue;
 				}
 
-				/*int dif1 = map[r1.getRank(x)] - map[r1.getRank(y)];
-				int dif2 = map[r2.getRank(x)] - map[r2.getRank(y)];*/
+				/*
+				 * int dif1 = map[r1.getRank(x)] - map[r1.getRank(y)]; int dif2
+				 * = map[r2.getRank(x)] - map[r2.getRank(y)];
+				 */
 				int dif1 = r1.getRank(x) - r1.getRank(y);
 				int dif2 = r2.getRank(x) - r2.getRank(y);
 

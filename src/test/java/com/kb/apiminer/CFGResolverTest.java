@@ -1,14 +1,18 @@
 package com.kb.apiminer;
 
-import java.io.*;
-import java.util.List;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileWriter;
+import java.io.StringWriter;
+import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.jgrapht.DirectedGraph;
-import org.jgrapht.Graph;
 import org.jgrapht.ext.DOTExporter;
 import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.graph.DefaultEdge;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.kb.java.graph.Node;
@@ -21,12 +25,11 @@ public class CFGResolverTest extends AbstractParseTest{
 	@Test
 	public void testOneMethod() {
 
-		File f = new File("./sourceJavaFiles");
+		File f = new File("/home/sachint/softwares/repos/tassal-bk/workspace/apiminer/src/test/resources/sourceJavaFiles");
 		File[] listOfSourceFiles = f.listFiles();
 
-
 		if(listOfSourceFiles != null && listOfSourceFiles.length > 0){
-
+			int i = 0;
 			for(File sourceFile :  listOfSourceFiles){
 				try{
 
@@ -43,7 +46,7 @@ public class CFGResolverTest extends AbstractParseTest{
 					VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
 						@Override
 						public String getVertexName(Node vertex) {
-							return vertex.getId() + " : " + vertex.getLabel();
+							return /*vertex.getId() + " : " + */vertex.getLabel();
 						}
 					};
 
@@ -57,12 +60,20 @@ public class CFGResolverTest extends AbstractParseTest{
 					//exporter.export(new OutputStreamWriter(System.out), cfgResolver.getMethodCFGs().get(0));
 
 					FileWriter dotFileWriter = new FileWriter("diagraph.dot",true);
-					for(DirectedGraph<Node,DefaultEdge> graphs : cfgResolver.getMethodCFGs()) {
+					
+					for(DirectedGraph<Node,DefaultEdge> graph : cfgResolver.getMethodCFGs()) {
+						validateGraph(graph);
 						StringWriter stringWriter = new StringWriter();
-						exporter.export(stringWriter, graphs);
+						exporter.export(stringWriter, graph);
 
-						if(stringWriter.getBuffer().toString().contains("BufferedReader")){
-							dotFileWriter.append(stringWriter.getBuffer().toString()+"\n\n");
+						if(stringWriter.getBuffer().toString().contains("OutputStream")){
+							String graphString = stringWriter.getBuffer().toString();
+							String label = graph.vertexSet().iterator().next().getLabel();
+							label = StringUtils.substringBetween(label, ":", "(");
+							String name = sourceFile.getName();
+							name = StringUtils.substringBefore(name, ".java");
+							graphString = graphString.replace("digraph G", "digraph " + name + "0" + label);
+							dotFileWriter.append(graphString+"\n\n");
 							dotFileWriter.flush();
 						}
 
@@ -74,4 +85,16 @@ public class CFGResolverTest extends AbstractParseTest{
 			}
 		}
 	}
+
+	private void validateGraph(DirectedGraph<Node, DefaultEdge> graph) {
+		Set<DefaultEdge> edgeset = graph.edgeSet();
+		for(DefaultEdge e : edgeset){
+			Node src = graph.getEdgeSource(e);
+			Node tgt = graph.getEdgeTarget(e);
+			if(src.getLabel().equals("START IF")){
+				Assert.assertNotEquals(tgt.getLabel(), "END IF");
+			}
+		}
+	}
+	
 }

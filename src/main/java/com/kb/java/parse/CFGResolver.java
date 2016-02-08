@@ -161,27 +161,46 @@ public class CFGResolver extends MethodInvocationResolver {
 				ControlStructType.IF);
 		Node ifEnd = new ControlStructureNode(nodeId++, false,
 				ControlStructType.IF);
+		Node prevNode = currentNode;
 		addEdge(currentNode, ifStart);
 		currentNode = ifStart;
 
 		node.getExpression().accept(this);
 
 		Statement thenStatement = node.getThenStatement();
-
+		Boolean thenBodyPresent = false;
 		if (thenStatement != null) {
 			currentNode = ifStart;
 			thenStatement.accept(this);
-			addEdge(currentNode, ifEnd);
+			if(currentNode != ifStart){
+				//If nothing added in then statement
+				addEdge(currentNode, ifEnd);
+				thenBodyPresent = true;
+			}
 		}
 
 		Statement elseStatement = node.getElseStatement();
+		Boolean elseBodyPresent = false;
 		if (elseStatement != null) {
 			currentNode = ifStart;
 			elseStatement.accept(this);
-			addEdge(currentNode, ifEnd);
+			if(currentNode != ifStart){
+				//If nothing added in else statement
+				addEdge(currentNode, ifEnd);
+				elseBodyPresent = true;
+			}
 		}
 
-		currentNode = ifEnd;
+		if(thenBodyPresent || elseBodyPresent){
+			//If we had then or else body 
+			currentNode = ifEnd;
+		} else {
+			// else remove the if start completely
+			if(!gbStack.empty()){
+				gbStack.peek().removeVertex(ifStart);
+			}
+			currentNode = prevNode;
+		}
 		// Don't go inside again. We already done that above.
 		return false;
 	}
@@ -194,15 +213,14 @@ public class CFGResolver extends MethodInvocationResolver {
 	@Override
 	public boolean visit(EnhancedForStatement node) {
 		super.visit(node);
-		visitLoop(node.getExpression(), node.getBody(), "For Start", "For End");
+		visitLoop(node.getExpression(), node.getBody(), ControlStructType.FOR);
 		return false;
 	}
 
 	@Override
 	public boolean visit(WhileStatement node) {
 		super.visit(node);
-		visitLoop(node.getExpression(), node.getBody(), "While Start",
-				"while End");
+		visitLoop(node.getExpression(), node.getBody(), ControlStructType.WHILE);
 		return false;
 
 	}
@@ -210,7 +228,7 @@ public class CFGResolver extends MethodInvocationResolver {
 	@Override
 	public boolean visit(ForStatement node) {
 		super.visit(node);
-		visitLoop(node.getExpression(), node.getBody(), "For Start", "For End");
+		visitLoop(node.getExpression(), node.getBody(), ControlStructType.FOR);
 		return false;
 	}
 
@@ -226,12 +244,11 @@ public class CFGResolver extends MethodInvocationResolver {
 		this.minVertices = minVertices;
 	}
 
-	private void visitLoop(Expression expression, Statement loopBody,
-			String startLabel, String endLabel) {
+	private void visitLoop(Expression expression, Statement loopBody, ControlStructType controlStructType) {
 		Node startNode = new ControlStructureNode(nodeId++, true,
-				ControlStructType.FOR);
+				controlStructType);
 		Node endNode = new ControlStructureNode(nodeId++, false,
-				ControlStructType.FOR);
+				controlStructType);
 		addEdge(currentNode, startNode);
 		currentNode = startNode;
 

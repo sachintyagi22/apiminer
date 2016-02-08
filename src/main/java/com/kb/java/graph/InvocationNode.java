@@ -3,6 +3,8 @@ package com.kb.java.graph;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class InvocationNode extends LabelNode{
 
 	private String targetType;
@@ -20,7 +22,7 @@ public class InvocationNode extends LabelNode{
 	@Override
 	public String getLabel() {
 		StringBuffer sb = new StringBuffer();
-		if(targetType!=null){
+		if(!StringUtils.isEmpty(targetType)){
 			sb.append(targetType).append(".");
 		}
 		sb.append(methodName);
