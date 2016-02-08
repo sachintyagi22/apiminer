@@ -24,42 +24,8 @@ public class Main {
 
 	@SuppressWarnings("unused")
 	public static void main(String[] args) throws UnknownExpressionException {
-		String rootPath = args[0];
-		File rootFile = new File(rootPath);
-
-		Miner miner = new Miner();
-		miner.mine(rootFile);
-
-		for (Type type : miner.getMinedTypes()) {
-			if (!type.toString().equals("HttpRoute")) {
-				logger.debug("Skipping type: {}", type);
-				continue;
-			}
-			
-			logger.debug("Analyzing uses of: {}" , type);
-
-			Set<ClassDeclaration> decs = miner.getClassDecs(type);
-			List<ConcreteUse> concreteUses = new LinkedList<>();
-
-			for (ClassDeclaration dec : decs) {
-				List<ConcreteUse> uses = ConcreteUse.extractUses(type, dec);
-				/*
-				 * for(ConcreteUse c: uses){ if(c.getCFG().asList().size() >0)
-				 * concreteUses.add(c); }
-				 */
-				concreteUses.addAll(uses);
-
-			}
-
-			logger.debug("Analyzing uses of: {} concrete uses" , concreteUses.size());
-
-			for (ConcreteUse use : concreteUses) {
-				logger.debug("{}", use);
-			}
-
-			// if more than n, then cluster them
 			List<List<ConcreteUse>> clusters = ConcreteUseClusterer
-					.cluster(concreteUses);
+					.cluster(null);
 
 			// abstract each cluster, then print it
 			List<AbstractUse> abstractUses = new LinkedList<>();
@@ -67,8 +33,5 @@ public class Main {
 				AbstractUse use = AbstractUse.abstractUse(cluster);
 				logger.debug("{}", use);
 			}
-			return;
-		}
-
 	}
 }

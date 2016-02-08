@@ -66,14 +66,14 @@ public class InvocationNode extends LabelNode{
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	public boolean equals(Object pLabelNode) {
+		if (this == pLabelNode)
 			return true;
-		if (obj == null)
+		if (pLabelNode == null)
 			return false;
-		if (getClass() != obj.getClass())
+		if (getClass() != pLabelNode.getClass())
 			return false;
-		InvocationNode other = (InvocationNode) obj;
+		InvocationNode other = (InvocationNode) pLabelNode;
 		if (methodName == null) {
 			if (other.methodName != null)
 				return false;

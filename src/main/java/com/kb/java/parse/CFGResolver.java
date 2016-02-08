@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import com.kb.java.graph.*;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
@@ -19,22 +20,18 @@ import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.WhileStatement;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
+
 import org.jgrapht.graph.builder.DirectedGraphBuilder;
 
-import com.kb.java.graph.ControlStructureNode;
 import com.kb.java.graph.ControlStructureNode.ControlStructType;
-import com.kb.java.graph.InvocationNode;
-import com.kb.java.graph.LabelNode;
-import com.kb.java.graph.Node;
 
 public class CFGResolver extends MethodInvocationResolver {
 
 	private int nodeId = 0;
 	private Node currentNode;
 	private Stack<Node> nodeStack = new Stack<Node>();
-	private Stack<DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>> gbStack = new Stack<DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>>();
-	private List<DirectedGraph<Node, DefaultEdge>> methodCFGs = new ArrayList<DirectedGraph<Node, DefaultEdge>>();
+	private Stack<DirectedGraphBuilder<Node, DirectedEdge, DirectedGraph<Node, DirectedEdge>>> gbStack = new Stack<DirectedGraphBuilder<Node, DirectedEdge, DirectedGraph<Node, DirectedEdge>>>();
+	private List<DirectedGraph<Node, DirectedEdge>> methodCFGs = new ArrayList<DirectedGraph<Node, DirectedEdge>>();
 	private Map<ASTNode, Node> nodeMap = new HashMap<ASTNode, Node>();
 	private int minVertices = 2;
 
@@ -47,9 +44,9 @@ public class CFGResolver extends MethodInvocationResolver {
 
 	@Override
 	public boolean visit(MethodDeclaration node) {
-		DirectedGraph<Node, DefaultEdge> currentGraph = new DefaultDirectedGraph<Node, DefaultEdge>(
-				DefaultEdge.class);
-		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = new DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>>(
+		DirectedGraph<Node, DirectedEdge> currentGraph = new DefaultDirectedGraph<Node, DirectedEdge>(
+				DirectedEdge.class);
+		DirectedGraphBuilder<Node, DirectedEdge, DirectedGraph<Node, DirectedEdge>> graphBuilder = new DirectedGraphBuilder<Node, DirectedEdge, DirectedGraph<Node, DirectedEdge>>(
 				currentGraph);
 		gbStack.push(graphBuilder);
 		Node root = new LabelNode(nodeId++, "ROOT");
@@ -69,9 +66,9 @@ public class CFGResolver extends MethodInvocationResolver {
 		if (!nodeStack.isEmpty()) {
 			currentNode = nodeStack.pop();
 		}
-		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = gbStack
+		DirectedGraphBuilder<Node, DirectedEdge, DirectedGraph<Node, DirectedEdge>> graphBuilder = gbStack
 				.pop();
-		DirectedGraph<Node, DefaultEdge> graph = graphBuilder.build();
+		DirectedGraph<Node, DirectedEdge> graph = graphBuilder.build();
 		if (graph.vertexSet() != null && graph.vertexSet().size() > minVertices) {
 			methodCFGs.add(graph);
 		}
@@ -131,6 +128,10 @@ public class CFGResolver extends MethodInvocationResolver {
 
 		Map<String, Integer> scope = getNodeScopes().get(node);
 		Map<Integer, List<ASTNode>> varBindings = getVariableBinding();
+
+		if(currMethInvok == null)
+			return false;
+
 		Integer bindingId = scope.get(currMethInvok.getTarget());
 		if (bindingId != null) {
 			List<ASTNode> parentNodes = varBindings.get(bindingId);
@@ -208,7 +209,7 @@ public class CFGResolver extends MethodInvocationResolver {
 		return false;
 	}
 
-	public List<DirectedGraph<Node, DefaultEdge>> getMethodCFGs() {
+	public List<DirectedGraph<Node, DirectedEdge>> getMethodCFGs() {
 		return methodCFGs;
 	}
 
@@ -242,7 +243,9 @@ public class CFGResolver extends MethodInvocationResolver {
 	}
 
 	private void addEdge(Node curr, Node next) {
-		DirectedGraphBuilder<Node, DefaultEdge, DirectedGraph<Node, DefaultEdge>> graphBuilder = gbStack
+		if(gbStack.empty())
+			return;
+		DirectedGraphBuilder<Node, DirectedEdge, DirectedGraph<Node, DirectedEdge>> graphBuilder = gbStack
 				.peek();
 		if (curr != next) {
 			graphBuilder.addEdge(curr, next);
@@ -250,6 +253,8 @@ public class CFGResolver extends MethodInvocationResolver {
 	}
 
 	private Node createNode(ASTNode node, MethodInvokRef currMethInvok) {
+		if (currMethInvok == null)
+			return null;
 		Node next = new InvocationNode(nodeId++, currMethInvok.getTargetType(),
 				currMethInvok.getMethodName(), currMethInvok.getArgTypes());
 		nodeMap.put(node, next);

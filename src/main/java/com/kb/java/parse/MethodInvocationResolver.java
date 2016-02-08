@@ -60,6 +60,9 @@ public class MethodInvocationResolver extends TypeResolver {
 		List<String> argTypes = translateArgsToTypes(args, scopeBindings);
 		String type = getNameOfType(node.getType());
 
+		if(methodStack.empty())
+			return false;
+
 		MethodDeclaration currentMethod = methodStack.peek();
 		String currMethodName = currentMethod.getName().toString();
 		List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
@@ -86,6 +89,8 @@ public class MethodInvocationResolver extends TypeResolver {
 		String targetType = translateTargetToType(expression, scopeBindings);
 		List<String> argTypes = translateArgsToTypes(args, scopeBindings);
 
+		if(methodStack.empty())
+			return false;
 		MethodDeclaration currentMethod = methodStack.peek();
 		String currMethodName = currentMethod.getName().toString();
 		List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
@@ -160,8 +165,8 @@ public class MethodInvocationResolver extends TypeResolver {
 
 			if (StringUtils.isEmpty(targetType)) {
 				// If still empty
-				System.err.println("Can't determine type for " + expression
-						+ expression.getClass());
+//				System.err.println("Can't determine type for " + expression
+//						+" "+ expression.getClass());
 			}
 		}
 		return targetType;
