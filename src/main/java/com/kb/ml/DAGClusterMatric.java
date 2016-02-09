@@ -92,8 +92,8 @@ public class DAGClusterMatric implements DistanceMetric<NamedDirectedGraph> {
 
 
     private double getDissimilarityValue(int nodeUnionSize, int nodeIntersectSize, int edgeUnionSize, int edgeIntersectSize) {
-        return (((nodeUnionSize - nodeIntersectSize) / nodeUnionSize) +
-                ((edgeUnionSize - edgeIntersectSize) / edgeUnionSize)) / 2;
+        return (((nodeUnionSize - nodeIntersectSize) * 1D / nodeUnionSize) +
+                ((edgeUnionSize - edgeIntersectSize) * 1D / edgeUnionSize)) / 2;
     }
 
 

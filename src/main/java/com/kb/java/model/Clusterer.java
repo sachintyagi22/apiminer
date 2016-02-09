@@ -29,7 +29,7 @@ import com.kb.ml.KMedoids;
 
 public class Clusterer {
 
-	public static final String FILE_CHANNEL = "FileChannel";
+	public static final String FILE_CHANNEL = "java.nio.channels.FileChannel";
 
 	public static void main(String[] args) {
 

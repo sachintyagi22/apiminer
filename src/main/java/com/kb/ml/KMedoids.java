@@ -89,10 +89,12 @@ public class KMedoids<T> {
 		List<List<T>> clusters = getClusters(data);
 		int i = 0;
 		for (List<T> c : clusters) {
+			T m = this.getMedoid(c.get(0));
+			c.sort((e1, e2) -> Double.compare(dist.getDistance(m, e1), dist.getDistance(m, e2)));
 			System.out.println("\n\n\n\n **** Cluster " + i + " {"
-					+ this.getMedoid(c.get(0)) + "} ****");
+					+ m + "} ****");
 			for (T n : c) {
-				System.out.println(n.toString());
+				System.out.println(n.toString() + "  ~  " + dist.getDistance(m, n));
 			}
 			i++;
 		}
