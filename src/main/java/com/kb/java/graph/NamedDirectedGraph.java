@@ -6,6 +6,8 @@ import java.util.Set;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.EdgeFactory;
 
+import com.kb.java.model.Clusterer;
+
 public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>{
 	
 	private DirectedGraph<Node, DirectedEdge> delegate;
@@ -24,7 +26,13 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>{
 	
 	@Override
 	public String toString() {
-		return label;
+		StringBuffer b = new StringBuffer(label).append(" [ ");
+		for(Node n : delegate.vertexSet()){
+			if(n.getLabel().contains(Clusterer.FILE_CHANNEL))
+				b.append(n.getLabel() + " , ");
+		}
+		b.append(" ]");
+		return b.toString();
 	}
 
 	@Override

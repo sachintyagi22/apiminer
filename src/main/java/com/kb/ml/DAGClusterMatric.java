@@ -56,44 +56,59 @@ public class DAGClusterMatric implements DistanceMetric<NamedDirectedGraph> {
     	
     	miss++;
         
-		Set<Node> nodeSet1 = Sets.filter(graph1.vertexSet(), filterNodeSet(filter));
-        Set<Node> nodeSet2 = Sets.filter(graph2.vertexSet(), filterNodeSet(filter));
-
-        Set<DirectedEdge> edgeSet1 = new HashSet<>();
-        Set<DirectedEdge> edgeSet2 = new HashSet<>();
-        for(Node node : nodeSet1){
-            edgeSet1.addAll(graph1.edgesOf(node));
-        }
-        for(Node node : nodeSet2){
-            edgeSet2.addAll(graph2.edgesOf(node));
-        }
-
-        Set<Node> filteredNodeSet1 = new HashSet<>();
-        for(DirectedEdge edge : edgeSet1){
-            filteredNodeSet1.add(graph1.getEdgeSource(edge));
-            filteredNodeSet1.add(graph1.getEdgeTarget(edge));
-        }
-
-        Set<Node> filteredNodeSet2 = new HashSet<>();
-        for(DirectedEdge edge : edgeSet2){
-            filteredNodeSet2.add(graph2.getEdgeSource(edge));
-            filteredNodeSet2.add(graph2.getEdgeTarget(edge));
-        }
-
-        Set<Node> unionOfNodes = getUnion(filteredNodeSet1, filteredNodeSet2);
-        Sets.SetView<Node> intersectionOfNodes = Sets.intersection(filteredNodeSet1, filteredNodeSet2);
-
-        Set<DirectedEdge> unionOfEdges = getUnion(edgeSet1, edgeSet2);
-        Sets.SetView<DirectedEdge> intersectionOfEdges = Sets.intersection(edgeSet1, edgeSet2);
-        dist = getDissimilarityValue(unionOfNodes.size(), intersectionOfNodes.size(), unionOfEdges.size(), intersectionOfEdges.size());
+		dist = calculateDistance(graph1, graph2);
         cache.put(key, dist);
         return dist;
     }
 
+	private Double calculateDistance(NamedDirectedGraph g1, NamedDirectedGraph g2) {
+		Double dist;
+		Set<Node> nodeSet1 = Sets.filter(g1.vertexSet(), filterNodeSet(filter));
+        Set<Node> nodeSet2 = Sets.filter(g2.vertexSet(), filterNodeSet(filter));
 
-    private double getDissimilarityValue(int nodeUnionSize, int nodeIntersectSize, int edgeUnionSize, int edgeIntersectSize) {
-        return (((nodeUnionSize - nodeIntersectSize) * 1D / nodeUnionSize) +
-                ((edgeUnionSize - edgeIntersectSize) * 1D / edgeUnionSize)) / 2;
+        /*Set<DirectedEdge> edgeSet1 = new HashSet<>();
+        Set<DirectedEdge> edgeSet2 = new HashSet<>();
+        for(Node node : nodeSet1){
+            edgeSet1.addAll(g1.edgesOf(node));
+        }
+        for(Node node : nodeSet2){
+            edgeSet2.addAll(g2.edgesOf(node));
+        }
+
+        Set<Node> filteredNodeSet1 = new HashSet<>();
+        for(DirectedEdge edge : edgeSet1){
+            filteredNodeSet1.add(g1.getEdgeSource(edge));
+            filteredNodeSet1.add(g1.getEdgeTarget(edge));
+        }
+
+        Set<Node> filteredNodeSet2 = new HashSet<>();
+        for(DirectedEdge edge : edgeSet2){
+            filteredNodeSet2.add(g2.getEdgeSource(edge));
+            filteredNodeSet2.add(g2.getEdgeTarget(edge));
+        }*/
+
+        Set<Node> filteredNodeSet1 = nodeSet1;
+        Set<Node> filteredNodeSet2 = nodeSet2;
+        Set<Node> unionOfNodes = getUnion(filteredNodeSet1, filteredNodeSet2);
+        Sets.SetView<Node> intersectionOfNodes = Sets.intersection(filteredNodeSet1, filteredNodeSet2);
+        //Sets.SetView<Node> intersectionOfNodes = Sets.intersection(nodeSet1, nodeSet2);
+
+       /* Set<DirectedEdge> unionOfEdges = getUnion(edgeSet1, edgeSet2);
+        Sets.SetView<DirectedEdge> intersectionOfEdges = Sets.intersection(edgeSet1, edgeSet2);*/
+        dist = getDissimilarityValue(unionOfNodes.size(), intersectionOfNodes.size()/*, unionOfEdges.size(), intersectionOfEdges.size()*/);
+        //dist = getDissimilarityValue(0, intersectionOfNodes.size());
+		return dist;
+	}
+
+
+    private Double getDissimilarityValue(int nodeUnionSize, int nodeIntersectSize) {
+    	return (nodeUnionSize - nodeIntersectSize) * 1D / nodeUnionSize;
+    	//return 1D / (nodeIntersectSize + 0.0001);
+	}
+
+	private double getDissimilarityValue(int nodeUnionSize, int nodeIntersectSize, int edgeUnionSize, int edgeIntersectSize) {
+    	return (((nodeUnionSize - nodeIntersectSize) * 1D / nodeUnionSize) /+
+                ((edgeUnionSize - edgeIntersectSize) * 1D / edgeUnionSize)) / 2D;
     }
 
 

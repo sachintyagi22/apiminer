@@ -30,6 +30,7 @@ import com.kb.ml.KMedoids;
 public class Clusterer {
 
 	public static final String FILE_CHANNEL = "java.nio.channels.FileChannel";
+	public static final int N_CLUSTERS = 8;
 
 	public static void main(String[] args) {
 
@@ -83,7 +84,7 @@ public class Clusterer {
 		}
 
 		DAGClusterMatric dagClusterMatric = new DAGClusterMatric(FILE_CHANNEL, instances.size());
-		KMedoids<NamedDirectedGraph> kMedoids = new KMedoids<>(dagClusterMatric, 4);
+		KMedoids<NamedDirectedGraph> kMedoids = new KMedoids<>(dagClusterMatric, N_CLUSTERS);
 		long start = System.currentTimeMillis();
 		kMedoids.buildClusterer(instances);
 		long end = System.currentTimeMillis();
