@@ -26,7 +26,7 @@ public class ASTParserTest extends AbstractParseTest {
 		SingleClassBindingResolver resolver = new SingleClassBindingResolver(
 				unit);
 		resolver.resolve();
-		Map<Integer, String> typesAtPos = resolver.getVariableTypesAtPosition();
+                Map<Integer, String> typesAtPos = resolver.getVariableTypesAtPosition();
 
 		for (Entry<Integer, String> e : typesAtPos.entrySet()) {
 			Integer line = unit.getLineNumber(e.getKey());
