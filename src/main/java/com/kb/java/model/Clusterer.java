@@ -19,6 +19,7 @@ import org.jgrapht.ext.VertexNameProvider;
 
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
+import de.parsemis.Miner;
 import com.kb.java.graph.DirectedEdge;
 import com.kb.java.graph.NamedDirectedGraph;
 import com.kb.java.graph.Node;
@@ -31,11 +32,14 @@ public class Clusterer {
 
 	public static final String FILE_CHANNEL = "java.nio.channels.FileChannel";
 	public static final int N_CLUSTERS = 8;
+	public static final String FILTERED_STRING = "java.io.BufferedReader";
 
 	public static void main(String[] args) {
 
+		String tmpFile = System.getProperty("java.io.tmpdir");
+
 		List<NamedDirectedGraph> instances = new ArrayList<>();
-		File f = new File("/home/sachint/Downloads/fileniochannels/");
+		File f = new File("/home/jatina/apiminer/sourceJavaFiles/");
 		File[] listOfSourceFiles = f.listFiles();
 		Integer i = 0;
 
@@ -58,7 +62,7 @@ public class Clusterer {
 										@Override
 										public boolean apply(DirectedGraph<Node, DirectedEdge> g) {
 											for(Node n : g.vertexSet()){
-												boolean contains = n.getLabel().contains(FILE_CHANNEL);
+												boolean contains = n.getLabel().contains(FILTERED_STRING);
 												if(contains) return true;
 											}
 											return false;
@@ -66,7 +70,7 @@ public class Clusterer {
 									});
 
 					for(DirectedGraph<Node, DirectedEdge> g : filteredGraphs){
-						String name = ""; 
+						String name = "";
 						for(Node n : g.vertexSet()){
 							if(n.getLabel().contains("ROOT:")){
 								name = StringUtils.substringAfter(n.getLabel(), "ROOT:");
@@ -76,7 +80,7 @@ public class Clusterer {
 						instances.add(new NamedDirectedGraph(g, i.toString(), sourceFile.getAbsolutePath() + ":" +  name));
 						i++;
 					}
-					
+
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -90,15 +94,15 @@ public class Clusterer {
 		long end = System.currentTimeMillis();
 		int total =  dagClusterMatric.getHits() + dagClusterMatric.getMiss();
 		System.out.println("Time taken for clustering : " + instances.size() + " graphs was " + (end - start)
-				+ " secs, Cache hit ratio : " + dagClusterMatric.getHits() * 100D / total + ", Cache size: " + dagClusterMatric.getMiss());
+				+ "mili secs, Cache hit ratio : " + dagClusterMatric.getHits() * 100D / total + ", Cache size: " + dagClusterMatric.getMiss());
 		kMedoids.printClusters(instances);
 
 		List<List<NamedDirectedGraph>> clusters = kMedoids.getClusters(instances);
-		
+
 		VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
 			@Override
 			public String getVertexName(Node vertex) {
-				return vertex.getId() + " : " + vertex.getLabel();
+				return /*vertex.getId() + " : " +*/ vertex.getLabel();
 			}
 		};
 
@@ -108,29 +112,31 @@ public class Clusterer {
 				return String.valueOf(vertex.getId());
 			}
 		};
-		
+
 		DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider, null);
 
 		try {
-			File clusterFile = new File("cluster11.dot");
-			if (clusterFile.exists()) {
-				clusterFile.delete();
-			}
+
 
 			int clusterCount = 0;
 			for (List<NamedDirectedGraph> cluster : clusters) {
-				FileWriter dotFileWriter = new FileWriter("cluster11.dot", true);
+				String fileName = "cluster"+(++clusterCount)+".dot";
 
-				dotFileWriter.append("============================"
-						+ (++clusterCount)
-						+ "==================================\n");
+				File clusterFile = new File(fileName);
+				if (clusterFile.exists()) {
+					clusterFile.delete();
+				}
+
+				FileWriter dotFileWriter = new FileWriter(fileName, true);
+				int minFreq = (int)(cluster.size()*0.15);
+				if(minFreq <= 5) { minFreq=6;}
 				for (DirectedGraph<Node, DirectedEdge> graph : cluster) {
 					StringWriter stringWriter = new StringWriter();
 					graph.vertexSet();
 					graph.edgeSet();
 					exporter.export(stringWriter, graph);
 
-					// if(stringWriter.getBuffer().toString().contains(FILE_CHANNEL)){
+					// if(stringWriter.getBuffer().toString().contains(FILTERED_STRING)){
 					dotFileWriter.append(stringWriter.getBuffer().toString()
 							+ "\n\n");
 					dotFileWriter.flush();
@@ -140,6 +146,14 @@ public class Clusterer {
 				}
 				dotFileWriter.flush();
 				dotFileWriter.close();
+
+				String parseMisArgs[] = new String[]{
+						"--graphFile="+fileName, "--outputFile=digraphResults_"+clusterCount,
+						"--algorithm=gspan", "--minimumFrequency="+minFreq, "--distribution=threads", "--threads=4",
+						"--minimumNodeCount=3",	"--minimumEdgeCount=3"
+				}; //"--storeHierarchicalEmbeddings=true", "--embeddingBased=trueexit"
+				System.out.println("Cluster Size is: "+cluster.size()+" , Minimum Freq: "+minFreq);
+				Miner.startParsemis(parseMisArgs);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
