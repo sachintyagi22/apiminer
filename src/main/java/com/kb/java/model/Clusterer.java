@@ -1,87 +1,172 @@
 package com.kb.java.model;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.PrintWriter;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.jgraph.graph.Edge;
-import org.jgrapht.DirectedGraph;
-import org.jgrapht.ext.DOTExporter;
-import org.jgrapht.ext.VertexNameProvider;
-
 import com.google.common.base.Predicate;
 import com.google.common.collect.Iterables;
-import com.kb.java.graph.ControlStructureNode;
-import com.kb.java.graph.DirectedEdge;
-import com.kb.java.graph.InvocationNode;
-import com.kb.java.graph.NamedDirectedGraph;
-import com.kb.java.graph.Node;
+import com.kb.java.graph.*;
 import com.kb.java.parse.CFGResolver;
 import com.kb.java.parse.JavaASTParser;
 import com.kb.ml.DAGClusterMatric;
 import com.kb.ml.KMedoids;
-
 import de.parsemis.Miner;
 import de.parsemis.graph.Graph;
 import de.parsemis.miner.environment.Settings;
 import de.parsemis.miner.general.DataBaseGraph;
 import de.parsemis.miner.general.Fragment;
+import org.apache.commons.lang3.StringUtils;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.jgrapht.DirectedGraph;
+import org.jgrapht.ext.DOTExporter;
+import org.jgrapht.ext.EdgeNameProvider;
+import org.jgrapht.ext.VertexNameProvider;
+import org.jgrapht.graph.DefaultDirectedWeightedGraph;
+import org.jgrapht.graph.DirectedGraphUnion;
+import org.jgrapht.graph.builder.DirectedWeightedGraphBuilder;
+import org.jgrapht.util.WeightCombiner;
+
+import java.io.*;
+import java.util.*;
 
 public class Clusterer {
 
+    static final Map<String, String> idMap = new HashMap<>();
+    static int innerIdCounter = 0;
 	//private static final String FILE_BASE_PATH = "/tmp/java.txt";
-	//private static final String FILE_BASE_PATH = "/home/sachint/tassal-tmp/";
-	private static final String FILE_BASE_PATH = "/home/sachint/Downloads/fileniochannels";
+	//private static final String FILE_BASE_PATH = "/home/jatina/20files";
+	private static final String FILE_BASE_PATH = "/home/jatina/apiminer/fileniochannels";
 	private static final double MIN_FREQ = 0.02;
-	public static final int N_CLUSTERS = 1;
+	public static final int N_CLUSTERS = 4;
 	public static final String FILTERED_STRING = "java.nio.channels.FileChannel";
 	private static boolean prune = false;
-	private static int minInstanceSize = 2;
+	private static int minInstanceSize = 4;
 
 	public static void main(String[] args) throws IOException {
 
 		long s = System.currentTimeMillis();
 		Map<String, NamedDirectedGraph> instances = getGraphInstances(FILE_BASE_PATH);
-		System.out.println("Getting graphs time : "+(System.currentTimeMillis() - s));
-		//List<List<NamedDirectedGraph>> clusters = getClusters(instances, N_CLUSTERS);
-		
-		List<Collection<NamedDirectedGraph>> clusters = new ArrayList<Collection<NamedDirectedGraph>>();
-		clusters.add(instances.values());
+        long graphReadTime = System.currentTimeMillis();
+		List<List<NamedDirectedGraph>> clusters = getClusters(instances.values(), N_CLUSTERS);
 
-		VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
+        //List<Collection<NamedDirectedGraph>> clusters = new ArrayList<Collection<NamedDirectedGraph>>();
+        //clusters.add(instances.values());
+        long clusterTime = System.currentTimeMillis();
+
+        VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
 			@Override
 			public String getVertexName(Node vertex) {
 				return /* vertex.getId() + " : " + */vertex.getLabel();
 			}
 		};
 
-		VertexNameProvider<Node> vertexIdProvider = new VertexNameProvider<Node>() {
-			@Override
+        VertexNameProvider<Node> vertexIdProvider = new VertexNameProvider<Node>() {
+            @Override
 			public String getVertexName(Node vertex) {
-				return String.valueOf(vertex.getId());
+                String id = idMap.get(vertex.getLabel());
+                if(id == null){
+                    id = String.valueOf(innerIdCounter++);
+                    idMap.put(vertex.getLabel(), id);
+                }
+				return id;
 			}
 		};
 
-		DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(
-				vertexIdProvider, vertexNameProvider, null);
+        EdgeNameProvider<DirectedEdge> edgeEdgeNameProvider = new EdgeNameProvider<DirectedEdge>() {
+            @Override
+            public String getEdgeName(DirectedEdge edge) {
+                return String.valueOf(edge.getWeight());
+            }
+        };
 
-		try {
+        DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(
+				vertexIdProvider, vertexNameProvider, edgeEdgeNameProvider);
+
+        int clusterIndex = 0;
+        NamedDirectedGraph current = new NamedDirectedGraph();
+        int i = 0;
+
+        for(List<NamedDirectedGraph> cluster: clusters){
+            int count = 0;
+            for(NamedDirectedGraph g : cluster){
+                if(g.vertexSet().size() < minInstanceSize){
+                    System.out.println("Skipping...");
+                    continue;
+                }
+                i++;
+                count ++;
+                if(i % 10 == 0){
+                    System.out.println("Processed graphs :" + i);
+                }
+
+                if(count % 100 == 0){
+                    trim(current, count * 0.02D);
+                }
+                current = mergeGraphs(current, g);
+            }
+            trim(current, count * 0.05);
+            File f = new File("/home/jatina/apiminer/cluster"+ clusterIndex++ +".dot");
+            if(f.exists()){
+                f.delete();
+            }
+            exporter.export(new PrintWriter(new FileOutputStream(f)), current);
+        }
+
+        System.out.println("Total graphs : " + i);
+
+        long trimTime = System.currentTimeMillis();
+        long patternTime = System.currentTimeMillis();
+
+
+        System.out.println("Graph read time: " + (graphReadTime - s));
+        System.out.println("Clustering time: " + (clusterTime - graphReadTime));
+        System.out.println("Pattern time: " + (patternTime - clusterTime));
+        System.out.println("Pattern time: " + (trimTime - patternTime));
+
+        //mineGraphDB(instances, clusters, exporter);
+
+    }
+
+    private static void trim(NamedDirectedGraph current, double support) {
+        Set<DirectedEdge> edgesToRemove = new HashSet<>();
+        for(DirectedEdge e : current.edgeSet()){
+            if(e.getWeight() < support){
+                edgesToRemove.add(e);
+            }
+        }
+
+        for(DirectedEdge e: edgesToRemove){
+            current.removeEdge(e);
+        }
+
+        Set<Node> nodesToRemove = new HashSet<>();
+        for(Node n : current.vertexSet()){
+            if(current.inDegreeOf(n)==0 && current.outDegreeOf(n)==0){
+                nodesToRemove.add(n);
+            }
+        }
+        for(Node n : nodesToRemove){
+            current.removeVertex(n);
+        }
+    }
+
+
+    private static NamedDirectedGraph mergeGraphs(NamedDirectedGraph digraph1, NamedDirectedGraph digraph2) {
+
+        DirectedGraphUnion<Node, DirectedEdge> du = new DirectedGraphUnion<>(digraph1, digraph2, WeightCombiner.SUM);
+        DirectedWeightedGraphBuilder<Node, DirectedEdge, NamedDirectedGraph> dwgb = new DirectedWeightedGraphBuilder<Node, DirectedEdge, NamedDirectedGraph>(new NamedDirectedGraph());
+
+        for(DirectedEdge e : du.edgeSet()){
+            LabelNode src = e.getSource();
+            LabelNode target = e.getTarget();
+            if(src.getLabel().contains(FILTERED_STRING) || target.getLabel().contains(FILTERED_STRING)){
+                double w = du.getEdgeWeight(e);
+                dwgb.addEdge(src, target, w);
+            }
+        }
+        return dwgb.build();
+    }
+
+
+    private static void mineGraphDB(Map<String, NamedDirectedGraph> instances, List<Collection<NamedDirectedGraph>> clusters, DOTExporter<Node, DirectedEdge> exporter) {
+        try {
 			int clusterCount = 0;
 			for (Collection<NamedDirectedGraph> cluster : clusters) {
 				String fileName = "cluster" + (++clusterCount) + ".dot";
@@ -106,7 +191,7 @@ public class Clusterer {
 					String graphString = stringWriter.getBuffer().toString();
 					System.out.println(graph.getId()  + " : " + graph.getLabel());
 					graphString = StringUtils.replace(graphString,
-							"digraph G {", "digraph " + graph.getId() + " {");
+                            "digraph G {", "digraph " + graph.getId() + " {");
 					dotFileWriter.append(graphString + "\n\n");
 					dotFileWriter.flush();
 
@@ -126,16 +211,15 @@ public class Clusterer {
 						+ " , Minimum Freq: " + minFreq);
 				final Settings settings = Settings.parse(parseMisArgs);
 				run(settings, instances, exporter);
-				
-				//Miner.startParsemis(parseMisArgs);
+
+				Miner.startParsemis(parseMisArgs);
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+    }
 
-	}
-
-	private static <NodeType, EdgeType> void run(final Settings<NodeType, EdgeType> settings, Map<String, NamedDirectedGraph> instances, DOTExporter<Node,DirectedEdge> exporter) {
+    private static <NodeType, EdgeType> void run(final Settings<NodeType, EdgeType> settings, Map<String, NamedDirectedGraph> instances, DOTExporter<Node,DirectedEdge> exporter) {
 		final Collection<Graph<NodeType, EdgeType>> graphs = Miner.parseInput(settings);
 		final Collection<Fragment<NodeType, EdgeType>> frags = Miner.mine(graphs,
 				settings);
@@ -187,13 +271,13 @@ public class Clusterer {
 	}
 
 	private static List<List<NamedDirectedGraph>> getClusters(
-			List<NamedDirectedGraph> instances, int n) {
+			Collection<NamedDirectedGraph> instances, int n) {
 		DAGClusterMatric dagClusterMatric = new DAGClusterMatric(
 				FILTERED_STRING, instances.size());
 		KMedoids<NamedDirectedGraph> kMedoids = new KMedoids<>(
 				dagClusterMatric, n);
 		long start = System.currentTimeMillis();
-		kMedoids.buildClusterer(instances);
+		kMedoids.buildClusterer(new ArrayList<NamedDirectedGraph>(instances));
 		long end = System.currentTimeMillis();
 		int total = dagClusterMatric.getHits() + dagClusterMatric.getMiss();
 		System.out.println("Time taken for clustering : " + instances.size()
@@ -381,5 +465,4 @@ public class Clusterer {
 		return contents.toString();
 
 	}
-
 }
