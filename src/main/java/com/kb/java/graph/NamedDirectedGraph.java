@@ -19,6 +19,10 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>{
 		this.id = id;
 		this.label = label;
 	}
+	
+	public String getLabel() {
+		return label;
+	}
 
 	public String getId() {
 		return id;
@@ -28,7 +32,7 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>{
 	public String toString() {
 		StringBuffer b = new StringBuffer(label).append(" [ ");
 		for(Node n : delegate.vertexSet()){
-			if(n.getLabel().contains(Clusterer.FILE_CHANNEL))
+			if(n.getLabel().contains(Clusterer.FILTERED_STRING))
 				b.append(n.getLabel() + " , ");
 		}
 		b.append(" ]");
