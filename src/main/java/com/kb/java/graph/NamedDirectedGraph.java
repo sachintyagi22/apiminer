@@ -7,8 +7,10 @@ import org.jgrapht.DirectedGraph;
 import org.jgrapht.EdgeFactory;
 
 import com.kb.java.model.Clusterer;
+import org.jgrapht.WeightedGraph;
+import org.jgrapht.graph.DefaultDirectedGraph;
 
-public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>{
+public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, WeightedGraph<Node, DirectedEdge>{
 	
 	private DirectedGraph<Node, DirectedEdge> delegate;
 	private final String id;
@@ -19,7 +21,14 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>{
 		this.id = id;
 		this.label = label;
 	}
-	
+
+	public NamedDirectedGraph() {
+		this.id="";
+		this.label="";
+		this.delegate= new DefaultDirectedGraph<Node, DirectedEdge>(DirectedEdge.class);
+
+	}
+
 	public String getLabel() {
 		return label;
 	}
@@ -165,8 +174,13 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>{
 	}
 
 	public double getEdgeWeight(DirectedEdge e) {
-		return delegate.getEdgeWeight(e);
+		DirectedEdge edge = getEdge(e.getSource(), e.getTarget());
+		return edge.getWeight();
 	}
-	
-	
+
+
+	@Override
+	public void setEdgeWeight(DirectedEdge directedEdge, double weight) {
+		directedEdge.setWeight(weight);
+	}
 }

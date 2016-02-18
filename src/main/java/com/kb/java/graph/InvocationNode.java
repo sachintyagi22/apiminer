@@ -54,7 +54,7 @@ public class InvocationNode extends LabelNode{
 		this.argTypes = argTypes;
 	}
 
-	@Override
+	/*@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -65,9 +65,9 @@ public class InvocationNode extends LabelNode{
 		result = prime * result
 				+ ((targetType == null) ? 0 : targetType.hashCode());
 		return result;
-	}
+	}*/
 
-	@Override
+	/*@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
 			return true;
@@ -92,6 +92,14 @@ public class InvocationNode extends LabelNode{
 		} else if (!argTypes.equals(other.argTypes))
 			return false;
 		return true;
+	}*/
+
+	public boolean equals(Object pInvocationNode) {
+		return super.equals(pInvocationNode);
+	}
+
+	public int hashCode() {
+		return super.hashCode();
 	}
 
 }

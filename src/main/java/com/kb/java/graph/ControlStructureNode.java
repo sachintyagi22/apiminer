@@ -19,7 +19,7 @@ public class ControlStructureNode extends LabelNode{
 	}
 	
 	
-	@Override
+	/*@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
@@ -42,9 +42,17 @@ public class ControlStructureNode extends LabelNode{
 		if (type != other.type)
 			return false;
 		return true;
+	}*/
+
+	@Override
+	public int hashCode() {
+		return super.hashCode();
 	}
 
-
+	@Override
+	public boolean equals(Object controlStructureNode) {
+		return super.equals(controlStructureNode);
+	}
 
 	public enum ControlStructType {
 		FOR("FOR"), IF("IF"), WHILE("WHILE");
