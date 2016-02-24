@@ -16,9 +16,9 @@ import org.junit.Test;
 
 import com.kb.java.graph.DirectedEdge;
 import com.kb.java.graph.Node;
-import com.kb.java.parse.CFGResolver;
-import com.kb.java.parse.JavaASTParser;
-import com.kb.java.parse.JavaASTParser.ParseType;
+import com.kodebeagle.javaparser.CFGResolver;
+import com.kodebeagle.javaparser.JavaASTParser;
+import com.kodebeagle.javaparser.JavaASTParser.ParseType;
 
 public class CFGResolverTest extends AbstractParseTest{
 
@@ -29,7 +29,6 @@ public class CFGResolverTest extends AbstractParseTest{
 		File[] listOfSourceFiles = f.listFiles();
 
 		if(listOfSourceFiles != null && listOfSourceFiles.length > 0){
-			int i = 0;
 			for(File sourceFile :  listOfSourceFiles){
 				try{
 
@@ -78,6 +77,7 @@ public class CFGResolverTest extends AbstractParseTest{
 						}
 
 						stringWriter.close();
+						dotFileWriter.close();
 					}
 				}catch (Exception e){
 					e.printStackTrace();

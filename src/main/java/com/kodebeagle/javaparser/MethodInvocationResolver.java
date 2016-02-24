@@ -1,20 +1,35 @@
-package com.kb.java.parse;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+package com.kodebeagle.javaparser;
+
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Stack;
 
 import org.apache.commons.lang3.StringUtils;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.CastExpression;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.ParenthesizedExpression;
-import org.eclipse.jdt.core.dom.QualifiedName;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Type;
@@ -23,9 +38,16 @@ public class MethodInvocationResolver extends TypeResolver {
 
 	private Map<String, List<MethodInvokRef>> methodInvoks = new HashMap<String, List<MethodInvokRef>>();
 	private Stack<MethodDeclaration> methodStack = new Stack<MethodDeclaration>();
-	private List<MethodDecl> declaredMethods = new ArrayList<MethodInvocationResolver.MethodDecl>();
+	private List<MethodDecl> declaredMethods = new ArrayList<MethodDecl>();
+	private List<TypeDecl> typeDeclarations = new ArrayList<>();
 	private MethodInvokRef currentMethodInvokRef;
 	private static final String OBJECT_TYPE = "java.lang.Object";
+	protected Map<String,String> types = new HashMap<>();
+	protected Queue<String> typesInFile = new ArrayDeque<>();
+
+	public List<TypeDecl> getTypeDeclarations() {
+		return typeDeclarations;
+	}
 
 	public Map<String, List<MethodInvokRef>> getMethodInvoks() {
 		return methodInvoks;
@@ -39,6 +61,32 @@ public class MethodInvocationResolver extends TypeResolver {
 		return currentMethodInvokRef;
 	}
 
+	String type = "";
+
+	@Override
+	public boolean visit(org.eclipse.jdt.core.dom.TypeDeclaration td) {
+		if (typesInFile.isEmpty()) {
+			type = "";
+		}
+		typesInFile.add(td.getName().getFullyQualifiedName());
+		TypeDecl obj = new TypeDecl(td.getName().getFullyQualifiedName(), td.getName().getStartPosition());
+		typeDeclarations.add(obj);
+		return true;
+	}
+
+	public Map<String, String> getTypes() {
+		return types;
+	}
+
+	@Override
+	public void endVisit(org.eclipse.jdt.core.dom.TypeDeclaration td) {
+		if (!typesInFile.isEmpty()) {
+			String xyz = typesInFile.remove();
+			type = type + xyz + ".";
+			types.put(xyz, currentPackage + "." + type.substring(0, type.lastIndexOf(".")));
+		}
+	}
+
 	@Override
 	public boolean visit(MethodDeclaration node) {
 		methodStack.push(node);
@@ -48,7 +96,9 @@ public class MethodInvocationResolver extends TypeResolver {
 
 	@Override
 	public void endVisit(MethodDeclaration node) {
-		methodStack.pop();
+		if (!methodStack.isEmpty()) {
+			methodStack.pop();
+		}
 		super.endVisit(node);
 	}
 
@@ -59,50 +109,48 @@ public class MethodInvocationResolver extends TypeResolver {
 		Map<String, Integer> scopeBindings = getNodeScopes().get(node);
 		List<String> argTypes = translateArgsToTypes(args, scopeBindings);
 		String type = getNameOfType(node.getType());
-
-		if(methodStack.empty())
-			return false;
-
-		MethodDeclaration currentMethod = methodStack.peek();
-		String currMethodName = currentMethod.getName().toString();
-		List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
-		if (invoks == null) {
-			invoks = new ArrayList<MethodInvocationResolver.MethodInvokRef>();
-			methodInvoks.put(currMethodName, invoks);
+		if (!methodStack.empty()) {
+			MethodDeclaration currentMethod = methodStack.peek();
+			String currMethodName = currentMethod.getName().toString();
+			List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
+			if (invoks == null) {
+				invoks = new ArrayList<MethodInvokRef>();
+				methodInvoks.put(currMethodName, invoks);
+			}
+			MethodInvokRef methodInvokRef = new MethodInvokRef("<init>", type, "", args
+					.size(), node.getStartPosition(), argTypes, node.getLength());
+			invoks.add(methodInvokRef);
+			currentMethodInvokRef = methodInvokRef;
 		}
-		MethodInvokRef methodInvokRef = new MethodInvokRef("<init>", type, "",
-				args.size(), node.getStartPosition(), argTypes);
-		invoks.add(methodInvokRef);
-		currentMethodInvokRef = methodInvokRef;
 		return super.visit(node);
 	}
 
 	@SuppressWarnings("rawtypes")
 	@Override
 	public boolean visit(MethodInvocation node) {
-		Expression expression = node.getExpression();
+		super.visit(node);
 		SimpleName methodName = node.getName();
+
 		List args = node.arguments();
+		Expression expression = node.getExpression();
 
 		Map<String, Integer> scopeBindings = getNodeScopes().get(node);
 		String target = getTarget(expression);
 		String targetType = translateTargetToType(expression, scopeBindings);
 		List<String> argTypes = translateArgsToTypes(args, scopeBindings);
-
-		if(methodStack.empty())
-			return false;
-		MethodDeclaration currentMethod = methodStack.peek();
-		String currMethodName = currentMethod.getName().toString();
-		List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
-		if (invoks == null) {
-			invoks = new ArrayList<MethodInvocationResolver.MethodInvokRef>();
-			methodInvoks.put(currMethodName, invoks);
+		if (!methodStack.empty()) {
+			MethodDeclaration currentMethod = methodStack.peek();
+			String currMethodName = currentMethod.getName().toString();
+			List<MethodInvokRef> invoks = methodInvoks.get(currMethodName);
+			if (invoks == null) {
+				invoks = new ArrayList<MethodInvokRef>();
+				methodInvoks.put(currMethodName, invoks);
+			}
+			MethodInvokRef methodInvokRef = new MethodInvokRef(methodName.toString(), targetType, target, args
+					.size(), node.getName().getStartPosition(), argTypes, methodName.getLength());
+			invoks.add(methodInvokRef);
+			currentMethodInvokRef = methodInvokRef;
 		}
-		MethodInvokRef methodInvokRef = new MethodInvokRef(
-				methodName.toString(), targetType, target, args.size(), node
-						.getName().getStartPosition(), argTypes);
-		invoks.add(methodInvokRef);
-		currentMethodInvokRef = methodInvokRef;
 		return true;
 	}
 
@@ -124,12 +172,18 @@ public class MethodInvocationResolver extends TypeResolver {
 			}
 			paramTypes.add(typeName);
 		}
-		declaredMethods.add(new MethodDecl(methodName, num, nameNode
-				.getStartPosition(), paramTypes));
+		if (node.isConstructor()) {
+			declaredMethods.add(new MethodDecl("<init>", num, nameNode
+					.getStartPosition(), paramTypes));
+		} else {
+			declaredMethods.add(new MethodDecl(methodName, num, nameNode
+					.getStartPosition(), paramTypes));
+		}
+
 	}
 
 	protected String translateTargetToType(Expression expression,
-			final Map<String, Integer> scopeBindings) {
+			Map<String, Integer> scopeBindings) {
 		String targetType = "";
 		if (expression != null) {
 			String target = getTarget(expression);
@@ -140,46 +194,22 @@ public class MethodInvocationResolver extends TypeResolver {
 				String staticTypeRef = getImportedNames().get(target);
 				if (staticTypeRef != null) {
 					targetType = "<static>" + staticTypeRef;
+				} else {
+					//System.out.println("Ignoring target " + target);
 				}
 			} else {
 				targetType = getVariableTypes().get(variableId);
-			}
-
-			if (StringUtils.isEmpty(targetType)) {
-				if (expression instanceof QualifiedName) {
-					targetType = expression.toString();
-				} else if (expression instanceof MethodInvocation) {
-					targetType = "UNKNOWN";
-				} else if (expression instanceof ParenthesizedExpression) {
-					final StringBuilder sb = new StringBuilder();
-					((ParenthesizedExpression)expression).accept(new ASTVisitor() {
-						@Override
-						public boolean visit(CastExpression node) {
-							sb.append(translateTargetToType(node.getExpression(), scopeBindings));
-							return super.visit(node);
-						}
-					});
-					targetType = sb.toString();
-				}
-			}
-
-			if (StringUtils.isEmpty(targetType)) {
-				// If still empty
-//				System.err.println("Can't determine type for " + expression
-//						+" "+ expression.getClass());
 			}
 		}
 		return targetType;
 	}
 
-	private String getTarget(Expression expression) {
+	protected String getTarget(Expression expression) {
 		String target = "";
-		if (expression != null) {
-			if (expression instanceof SimpleName) {
-				target = expression.toString();
-				if (target.contains("this.")) {
-					target = StringUtils.substringAfter(target, "this.");
-				}
+		if(expression != null){
+			target = expression.toString();
+			if (target.contains("this.")) {
+				target = StringUtils.substringAfter(target, "this.");
 			}
 		}
 		return target;
@@ -190,28 +220,42 @@ public class MethodInvocationResolver extends TypeResolver {
 			Map<String, Integer> scopeBindings) {
 		List<String> argTypes = new ArrayList<String>();
 		for (Object o : args) {
-			if (o instanceof SimpleName) {
-				String name = o.toString();
-				Integer varId = scopeBindings.get(name);
-				if (varId == null) {
-					String staticTypeRef = getImportedNames().get(name);
-					if (staticTypeRef != null) {
-						argTypes.add("<static>" + staticTypeRef);
-					} else {
-						argTypes.add(OBJECT_TYPE);
-					}
+			String name = o.toString();
+			Integer varId = scopeBindings.get(name);
+			if (varId == null) {
+				String staticTypeRef = getImportedNames().get(name);
+				if (staticTypeRef != null) {
+					argTypes.add("<static>" + staticTypeRef);
 				} else {
-					argTypes.add(getVariableTypes().get(varId));
+					argTypes.add(OBJECT_TYPE);
 				}
 			} else {
-				argTypes.add(OBJECT_TYPE);
+				argTypes.add(getVariableTypes().get(varId));
 			}
-
 		}
 		return argTypes;
 	}
 
-	public static class MethodDecl {
+	public static class TypeDecl {
+		private String className;
+		private Integer loc;
+
+		public TypeDecl(String className, Integer loc) {
+			super();
+			this.className = className;
+			this.loc = loc;
+		}
+
+		public String getClassName() {
+			return className;
+		}
+
+		public Integer getLoc() {
+			return loc;
+		}
+	}
+
+		public static class MethodDecl {
 		private String methodName;
 		private Integer argNum;
 		private Integer location;
@@ -257,11 +301,11 @@ public class MethodInvocationResolver extends TypeResolver {
 		private String target;
 		private Integer argNum;
 		private Integer location;
+		private Integer length;
 		private List<String> argTypes;
 
-		private MethodInvokRef(String methodName, String targetType,
-				String target, Integer argNum, Integer location,
-				List<String> argTypes) {
+		public MethodInvokRef(String methodName, String targetType, String target,
+				Integer argNum, Integer location, List<String> argTypes, Integer length) {
 			super();
 			this.methodName = methodName;
 			this.targetType = targetType;
@@ -269,8 +313,11 @@ public class MethodInvocationResolver extends TypeResolver {
 			this.location = location;
 			this.argTypes = argTypes;
 			this.target = target;
+			this.length =length;
+
 		}
 
+		public Integer getLength() {return length; }
 		public String getMethodName() {
 			return methodName;
 		}
@@ -287,6 +334,7 @@ public class MethodInvocationResolver extends TypeResolver {
 			this.targetType = targetType;
 		}
 
+		
 		public String getTarget() {
 			return target;
 		}
@@ -325,7 +373,5 @@ public class MethodInvocationResolver extends TypeResolver {
 					+ targetType + ", target=" + target + ", argNum=" + argNum
 					+ ", location=" + location + ", argTypes=" + argTypes + "]";
 		}
-
 	}
-
 }

@@ -1,6 +1,5 @@
 package com.kb.java.graph;
 
-import org.jgraph.graph.DefaultEdge;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 /**
@@ -11,13 +10,13 @@ public class DirectedEdge extends DefaultWeightedEdge {
     private static final long serialVersionUID = 1L;
     private double weight = 1D;
     @Override
-    public LabelNode getSource() {
-        return (LabelNode) super.getSource();
+    public Node getSource() {
+        return (Node) super.getSource();
     }
 
     @Override
-    public LabelNode getTarget() {
-        return (LabelNode) super.getTarget();
+    public Node getTarget() {
+        return (Node) super.getTarget();
     }
 
     @Override
@@ -43,8 +42,8 @@ public class DirectedEdge extends DefaultWeightedEdge {
     @Override
     public int hashCode() {
         int result = 1;
-        LabelNode sourceNode = (LabelNode) this.getSource();
-        LabelNode targetNode = (LabelNode) this.getTarget();
+        Node sourceNode = (Node) this.getSource();
+        Node targetNode = (Node) this.getTarget();
         if(sourceNode != null) {
             result = 31 * result + sourceNode.hashCode();
         }

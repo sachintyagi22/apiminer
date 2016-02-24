@@ -1,32 +1,53 @@
 package com.kb.java.graph;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.EdgeFactory;
-
-import com.kb.java.model.Clusterer;
 import org.jgrapht.WeightedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
 public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, WeightedGraph<Node, DirectedEdge>{
 	
 	private DirectedGraph<Node, DirectedEdge> delegate;
+	private final String seedName;
+	private final String methodName;
 	private final String id;
 	private final String label;
+	private final Set<String> paramTypes;
 	
-	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label) {
+	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label, String seedName, String methodName, Set<String> paramTypes) {
 		this.delegate = delegate;
 		this.id = id;
 		this.label = label;
+		this.seedName = seedName;
+		this.methodName = methodName;
+		this.paramTypes = paramTypes;
 	}
 
 	public NamedDirectedGraph() {
 		this.id="";
 		this.label="";
+		this.seedName = "";
+		this.methodName = "";
 		this.delegate= new DefaultDirectedGraph<Node, DirectedEdge>(DirectedEdge.class);
+		this.paramTypes = Collections.emptySet();
+	}
 
+	public Set<String> getParamTypes() {
+		return paramTypes;
+	}
+
+	public String getSeedName() {
+		return seedName;
+	}
+
+	public String getMethodName() {
+		return methodName;
 	}
 
 	public String getLabel() {
@@ -37,11 +58,39 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 		return id;
 	}
 	
+	public List<Node> getAsList(){
+		Set<Node> vertexSet = vertexSet();
+		List<Node> nodeList = new ArrayList<Node>(vertexSet.size());
+		Node root = null;
+		for(Node n : vertexSet){
+			if(inDegreeOf(n) == 0) {
+				root = n;
+				nodeList.add(n);
+				break;
+			}
+		}
+		
+		traverseFrom(root, nodeList);
+		return nodeList;
+	}
+	
+	private void traverseFrom(Node root, List<Node> nodeList) {
+		Set<DirectedEdge> outs = outgoingEdgesOf(root);
+		for(DirectedEdge o : outs){
+			Node next = o.getTarget();
+			if(nodeList.contains(next)){
+				//throw new IllegalStateException("Cycle detected");
+				continue;
+			}
+			nodeList.add(next);
+			traverseFrom(next, nodeList);
+		}
+	}
+
 	@Override
 	public String toString() {
-		StringBuffer b = new StringBuffer(label).append(" [ ");
+		StringBuffer b = new StringBuffer("x " + label+" y").append(" [ ");
 		for(Node n : delegate.vertexSet()){
-			if(n.getLabel().contains(Clusterer.FILTERED_STRING))
 				b.append(n.getLabel() + " , ");
 		}
 		b.append(" ]");

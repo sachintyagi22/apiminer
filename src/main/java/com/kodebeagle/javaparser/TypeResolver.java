@@ -1,4 +1,21 @@
-package com.kb.java.parse;
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.kodebeagle.javaparser;
 
 import java.util.List;
 import java.util.Map;
@@ -37,9 +54,9 @@ import com.google.common.collect.Maps;
  * name. E.g. in statement Type t = TypeFactory.getType(); 'Type' and
  * 'TypeFactory' nodes will be resolved to their fully qualified names at the
  * llocation.
- * 
+ *
  * </ol>
- * 
+ *
  * @author sachint
  *
  */
@@ -47,7 +64,7 @@ public class TypeResolver extends ASTVisitor {
 
 	private int nextVarId = 0;
 
-	private String currentPackage = "";
+	protected String currentPackage = "";
 
 	/**
 	 * A hash map between classNames and their respective packages
@@ -82,6 +99,9 @@ public class TypeResolver extends ASTVisitor {
 	 */
 	private Map<Integer, String> variableTypes = Maps.newTreeMap();
 
+	final Map<String, Integer> bindingsCopy = Maps.newTreeMap();
+
+
 	public Map<String, String> getImportedNames() {
 		return importedNames;
 	}
@@ -101,7 +121,7 @@ public class TypeResolver extends ASTVisitor {
 	protected Map<Integer, String> getVariableTypes() {
 		return variableTypes;
 	}
-	
+
 	protected Map<ASTNode, Map<String, Integer>> getNodeScopes() {
 		return nodeScopes;
 	}
@@ -140,11 +160,11 @@ public class TypeResolver extends ASTVisitor {
 
 	/**
 	 * Get the fully qualified name for a given short class name.
-	 * 
+	 *
 	 * @param className
 	 * @return
 	 */
-	private final String getFullyQualifiedNameFor(final String className) {
+	public final String getFullyQualifiedNameFor(final String className) {
 		if (importedNames.containsKey(className)) {
 			return importedNames.get(className);
 		} else {
@@ -162,32 +182,31 @@ public class TypeResolver extends ASTVisitor {
 	 * @return
 	 */
 	protected String getNameOfType(final Type type) {
-		final String nameOfType;
-		if(type == null)
-			return "";
-
-		if (type.isPrimitiveType()) {
-			nameOfType = type.toString();
-		} else if (type.isParameterizedType()) {
-			nameOfType = getParametrizedType((ParameterizedType) type);
-		} else if (type.isArrayType()) {
-			final ArrayType array = (ArrayType) type;
-			nameOfType = getNameOfType(array.getElementType()) + "[]";
-		} else if (type.isUnionType()) {
-			final UnionType uType = (UnionType) type;
-			final StringBuffer sb = new StringBuffer();
-			for (final Object unionedType : uType.types()) {
-				sb.append(getNameOfType(((Type) unionedType)));
-				sb.append(" | ");
+		 String nameOfType = "";
+		if (type != null) {
+			if (type.isPrimitiveType()) {
+				nameOfType = type.toString();
+			} else if (type.isParameterizedType()) {
+				nameOfType = getParametrizedType((ParameterizedType) type);
+			} else if (type.isArrayType()) {
+				final ArrayType array = (ArrayType) type;
+				nameOfType = getNameOfType(array.getElementType()) + "[]";
+			} else if (type.isUnionType()) {
+				final UnionType uType = (UnionType) type;
+				final StringBuffer sb = new StringBuffer();
+				for (final Object unionedType : uType.types()) {
+					sb.append(getNameOfType(((Type) unionedType)));
+					sb.append(" | ");
+				}
+				sb.delete(sb.length() - 3, sb.length());
+				nameOfType = sb.toString();
+			} else if (type.isWildcardType()) {
+				final WildcardType wType = (WildcardType) type;
+				nameOfType = (wType.isUpperBound() ? "? extends " : "? super ")
+						+ getNameOfType(wType.getBound());
+			} else {
+				nameOfType = getFullyQualifiedNameFor(type.toString());
 			}
-			sb.delete(sb.length() - 3, sb.length());
-			nameOfType = sb.toString();
-		} else if (type.isWildcardType()) {
-			final WildcardType wType = (WildcardType) type;
-			nameOfType = (wType.isUpperBound() ? "? extends " : "? super ")
-					+ getNameOfType(wType.getBound());
-		} else {
-			nameOfType = getFullyQualifiedNameFor(type.toString());
 		}
 		return nameOfType;
 	}
@@ -216,7 +235,6 @@ public class TypeResolver extends ASTVisitor {
 		final ASTNode parent = node.getParent();
 		if (parent != null && nodeScopes.containsKey(parent)) {
 			// inherit all variables in parent scope
-			final Map<String, Integer> bindingsCopy = Maps.newTreeMap();
 			for (final Entry<String, Integer> binding : nodeScopes.get(parent)
 					.entrySet()) {
 				bindingsCopy.put(binding.getKey(), binding.getValue());
