@@ -103,30 +103,34 @@ public class Main {
 		File f = new File(path);
 		List<File> listOfSourceFiles = new ArrayList<File>();
 		findJavaFiles(f, listOfSourceFiles);
-		return getGraphInstancesForFiles(listOfSourceFiles);
-	}
-
-	private static Map<String, NamedDirectedGraph> getGraphInstancesForFiles(
-			List<File> listOfSourceFiles) throws FileNotFoundException {
-
-		Map<String, NamedDirectedGraph> instances = new HashMap<String, NamedDirectedGraph>();
+		List<String> fileContents = new ArrayList<String>();
 		for (File sourceFile : listOfSourceFiles) {
 			FileInputStream fileInputStream = new FileInputStream(sourceFile);
 			String fileContent = readInputStream(fileInputStream);
+			fileContents.add(fileContent);
+			
+		}
+		return getGraphInstancesForFiles(fileContents);
+	}
+
+	private static Map<String, NamedDirectedGraph> getGraphInstancesForFiles(
+			List<String> sourceFiles) throws FileNotFoundException {
+
+		Map<String, NamedDirectedGraph> instances = new HashMap<String, NamedDirectedGraph>();
+		for (String fileContent : sourceFiles) {
+			
 			List<NamedDirectedGraph> graphs = graphUtils.getGraphsFromFile(
 					fileContent, FILTERED_STRING);
 			Integer i = 0;
 			for (NamedDirectedGraph g : graphs) {
 				instances.put(
 						g.getId(),
-						new NamedDirectedGraph(g, g.getId(), sourceFile
-								.getAbsolutePath() + ":" + g.getLabel(), g
+						new NamedDirectedGraph(g, g.getId(), g.getLabel(), g
 								.getSeedName(), g.getMethodName(), g
 								.getParamTypes()));
 				i++;
 			}
 		}
-
 		return instances;
 	}
 
