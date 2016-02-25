@@ -1,10 +1,15 @@
 package com.kb;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.PrintWriter;
+import java.util.*;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.jgrapht.ext.DOTExporter;
+import org.jgrapht.ext.EdgeNameProvider;
+import org.jgrapht.ext.VertexNameProvider;
 import org.jgrapht.graph.DirectedGraphUnion;
 import org.jgrapht.graph.builder.DirectedWeightedGraphBuilder;
 import org.jgrapht.util.WeightCombiner;
@@ -16,7 +21,8 @@ import com.kodebeagle.javaparser.CFGResolver;
 import com.kodebeagle.javaparser.JavaASTParser;
 
 public class GraphUtils {
-
+	public Map<String, String> idMap = new HashMap<>();
+	public int innerIdCounter = 0;
 	public List<NamedDirectedGraph> getGraphsFromFile(String fileContent) {
 		return getGraphsFromFile(fileContent, "");
 	}
@@ -68,5 +74,52 @@ public class GraphUtils {
 	            dwgb.addEdge(src, target, w);
 	        }
 	        return dwgb.build();
-	    }
+	 }
+
+	public void getNamedDirectedGraphs(Map<String, NamedDirectedGraph> instances, List<NamedDirectedGraph> graphs) {
+		for (NamedDirectedGraph g : graphs) {
+			instances.put(
+					g.getId(),
+					new NamedDirectedGraph(g, g.getId(), g.getLabel(), g
+							.getSeedName(), g.getMethodName(), g
+							.getParamTypes()));
+//				i++;
+		}
+	}
+
+	public void saveToFile(NamedDirectedGraph current, String path)
+			throws FileNotFoundException {
+		DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider, edgeEdgeNameProvider);
+		File f = new File(path);
+		if(f.exists()){
+			f.delete();
+		}
+		exporter.export(new PrintWriter(new FileOutputStream(f)), current);
+	}
+
+	private static VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
+		@Override
+		public String getVertexName(Node vertex) {
+			return vertex.getLabel();
+		}
+	};
+
+	private VertexNameProvider<Node> vertexIdProvider = new VertexNameProvider<Node>() {
+		@Override
+		public String getVertexName(Node vertex) {
+			String id = idMap.get(vertex.getLabel());
+			if(id == null){
+				id = String.valueOf(innerIdCounter++);
+				idMap.put(vertex.getLabel(), id);
+			}
+			return id;
+		}
+	};
+
+	public static EdgeNameProvider<DirectedEdge> edgeEdgeNameProvider = new EdgeNameProvider<DirectedEdge>() {
+		@Override
+		public String getEdgeName(DirectedEdge edge) {
+			return String.valueOf(edge.getWeight());
+		}
+	};
 }
