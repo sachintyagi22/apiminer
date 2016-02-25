@@ -1,5 +1,6 @@
 package com.kb.java.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -10,7 +11,7 @@ import com.kb.java.graph.NamedDirectedGraph;
 import com.kb.ml.DAGClusterMatric;
 import com.kb.ml.KMedoids;
 
-public class Clusterer {
+public class Clusterer implements Serializable{
 
 	private final static Logger LOG = Logger.getLogger(Clusterer.class);
 

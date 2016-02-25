@@ -1,8 +1,9 @@
 package com.kb.java.model;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Cluster<T> {
+public class Cluster<T> implements Serializable{
 
 	private final List<T> instances;
 	private final T mean;
@@ -26,6 +27,8 @@ public class Cluster<T> {
 	public List<T> getInstances() {
 		return instances;
 	}
+
+	public int getSizeOfCluster() { return instances.size();}
 
 	public T getMean() {
 		return mean;

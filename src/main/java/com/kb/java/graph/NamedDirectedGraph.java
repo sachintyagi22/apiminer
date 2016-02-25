@@ -1,5 +1,6 @@
 package com.kb.java.graph;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,22 +12,34 @@ import org.jgrapht.EdgeFactory;
 import org.jgrapht.WeightedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
-public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, WeightedGraph<Node, DirectedEdge>{
+public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, WeightedGraph<Node, DirectedEdge>,Serializable {
 	
 	private DirectedGraph<Node, DirectedEdge> delegate;
 	private final String seedName;
 	private final String methodName;
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	private final String fileName;
 	private final String id;
 	private final String label;
 	private final Set<String> paramTypes;
+	private int startLineNumber;
+	private int endLineNumber;
 	
-	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label, String seedName, String methodName, Set<String> paramTypes) {
+	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label, String seedName,
+							  String methodName, String fileName, Set<String> paramTypes, int startLineNumber, int endLineNumber)  {
 		this.delegate = delegate;
 		this.id = id;
 		this.label = label;
 		this.seedName = seedName;
 		this.methodName = methodName;
+		this.fileName = fileName;
 		this.paramTypes = paramTypes;
+		this.startLineNumber = startLineNumber;
+		this.endLineNumber = endLineNumber;
 	}
 
 	public NamedDirectedGraph() {
@@ -34,6 +47,7 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 		this.label="";
 		this.seedName = "";
 		this.methodName = "";
+		this.fileName = "";
 		this.delegate= new DefaultDirectedGraph<Node, DirectedEdge>(DirectedEdge.class);
 		this.paramTypes = Collections.emptySet();
 	}
@@ -57,7 +71,11 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 	public String getId() {
 		return id;
 	}
-	
+
+	public int getStartLineNumber() { return startLineNumber; }
+
+	public int getEndLineNumber() { return endLineNumber; }
+
 	public List<Node> getAsList(){
 		Set<Node> vertexSet = vertexSet();
 		List<Node> nodeList = new ArrayList<Node>(vertexSet.size());
