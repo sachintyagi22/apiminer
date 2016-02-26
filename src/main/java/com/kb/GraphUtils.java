@@ -1,9 +1,6 @@
 package com.kb;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.PrintWriter;
+import java.io.*;
 import java.util.*;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -20,7 +17,7 @@ import com.kb.java.graph.Node;
 import com.kodebeagle.javaparser.CFGResolver;
 import com.kodebeagle.javaparser.JavaASTParser;
 
-public class GraphUtils {
+public class GraphUtils implements Serializable{
 	public Map<String, String> idMap = new HashMap<>();
 	public int innerIdCounter = 0;
 	public List<NamedDirectedGraph> getGraphsFromFile(String fileContent) {

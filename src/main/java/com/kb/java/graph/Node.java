@@ -1,6 +1,8 @@
 package com.kb.java.graph;
 
-public interface Node {
+import java.io.Serializable;
+
+public interface Node extends Serializable {
 
 	public String getLabel();
 

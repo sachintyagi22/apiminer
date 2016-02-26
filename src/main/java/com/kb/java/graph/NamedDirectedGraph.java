@@ -1,5 +1,6 @@
 package com.kb.java.graph;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -11,7 +12,7 @@ import org.jgrapht.EdgeFactory;
 import org.jgrapht.WeightedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
-public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, WeightedGraph<Node, DirectedEdge>{
+public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, WeightedGraph<Node, DirectedEdge>,Serializable {
 	
 	private DirectedGraph<Node, DirectedEdge> delegate;
 	private final String seedName;
@@ -20,7 +21,8 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 	private final String label;
 	private final Set<String> paramTypes;
 	
-	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label, String seedName, String methodName, Set<String> paramTypes) {
+	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label, String seedName,
+							  String methodName, Set<String> paramTypes)  {
 		this.delegate = delegate;
 		this.id = id;
 		this.label = label;
