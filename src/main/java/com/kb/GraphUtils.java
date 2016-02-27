@@ -94,6 +94,13 @@ public class GraphUtils implements Serializable{
 		exporter.export(new PrintWriter(new FileOutputStream(f)), current);
 	}
 
+	public String saveToString(NamedDirectedGraph current, String path)
+			throws FileNotFoundException {
+		StringWriter writer = new StringWriter();
+		DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider, edgeEdgeNameProvider);
+		exporter.export(new PrintWriter(writer), current);
+		return writer.toString();
+	}
 	private static VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
 		@Override
 		public String getVertexName(Node vertex) {
