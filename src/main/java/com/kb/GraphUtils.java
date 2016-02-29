@@ -98,8 +98,8 @@ public class GraphUtils implements Serializable{
 			throws FileNotFoundException {
 		StringWriter writer = new StringWriter();
 		DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider, edgeEdgeNameProvider);
-		exporter.export(new PrintWriter(writer), current);
-		return writer.toString();
+		exporter.export(writer, current);
+		return writer.getBuffer().toString();
 	}
 	private static VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
 		@Override
