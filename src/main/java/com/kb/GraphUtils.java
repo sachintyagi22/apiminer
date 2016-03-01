@@ -19,7 +19,7 @@ import com.kodebeagle.javaparser.JavaASTParser;
 
 public class GraphUtils implements Serializable{
 	public Map<String, String> idMap = new HashMap<>();
-	public int innerIdCounter = 0;
+	public static int innerIdCounter = 0;
 	public List<NamedDirectedGraph> getGraphsFromFile(String fileContent) {
 		return getGraphsFromFile(fileContent, "");
 	}
@@ -92,6 +92,7 @@ public class GraphUtils implements Serializable{
 			f.delete();
 		}
 		exporter.export(new PrintWriter(new FileOutputStream(f)), current);
+		System.out.println("######## this id to check idmap  " + idMap);
 	}
 
 	public String saveToString(NamedDirectedGraph current, String path)
@@ -99,6 +100,7 @@ public class GraphUtils implements Serializable{
 		StringWriter writer = new StringWriter();
 		DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider, edgeEdgeNameProvider);
 		exporter.export(writer, current);
+		System.out.println("######## this id to check idmap  "+idMap);
 		return writer.getBuffer().toString();
 	}
 	private static VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {

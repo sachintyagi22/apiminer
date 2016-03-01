@@ -28,6 +28,8 @@ public class Cluster<T> implements Serializable{
 		return instances;
 	}
 
+	public int getSizeOfCluster() { return instances.size();}
+
 	public T getMean() {
 		return mean;
 	}
