@@ -20,13 +20,13 @@ import com.kodebeagle.javaparser.JavaASTParser;
 public class GraphUtils implements Serializable{
 	public Map<String, String> idMap = new HashMap<>();
 	public static int innerIdCounter = 0;
-	public List<NamedDirectedGraph> getGraphsFromFile(String fileContent) {
-		return getGraphsFromFile(fileContent, "");
+	public List<NamedDirectedGraph> getGraphsFromFile(String fileContent, String fileName) {
+		return getGraphsFromFile(fileContent, "", fileName);
 	}
 
 	public List<NamedDirectedGraph> getGraphsFromFile(String fileContent,
-			String seed) {
-		CFGResolver cfgResolver = new CFGResolver(seed);
+			String seed, String fileName) {
+		CFGResolver cfgResolver = new CFGResolver(seed, fileName);
 		JavaASTParser pars = new JavaASTParser(true);
 		ASTNode cu = pars.getAST(fileContent,
 				JavaASTParser.ParseType.COMPILATION_UNIT);
@@ -78,8 +78,8 @@ public class GraphUtils implements Serializable{
 			instances.put(
 					g.getId(),
 					new NamedDirectedGraph(g, g.getId(), g.getLabel(), g
-							.getSeedName(), g.getMethodName(), g
-							.getParamTypes()));
+							.getSeedName(), g.getMethodName(), g.getFileName(),
+							g.getParamTypes()));
 //				i++;
 		}
 	}
@@ -95,7 +95,7 @@ public class GraphUtils implements Serializable{
 		System.out.println("######## this id to check idmap  " + idMap);
 	}
 
-	public String saveToString(NamedDirectedGraph current, String path)
+	public String saveToString(NamedDirectedGraph current)
 			throws FileNotFoundException {
 		StringWriter writer = new StringWriter();
 		DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider, edgeEdgeNameProvider);

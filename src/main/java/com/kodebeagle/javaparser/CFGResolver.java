@@ -33,6 +33,7 @@ import com.kb.java.graph.SeedCreationNode.SeedCreationType;
 public class CFGResolver extends MethodInvocationResolver {
 
 	private int nodeId = 0;
+	private String fileName = "";
 	private Node currentNode;
 	private Stack<ParseState> nodeStack = new Stack<ParseState>();
 	private Stack<DirectedGraphBuilder<Node, DirectedEdge, DirectedGraph<Node, DirectedEdge>>> gbStack = 
@@ -46,8 +47,9 @@ public class CFGResolver extends MethodInvocationResolver {
 	public CFGResolver() {
 	}
 	
-	public CFGResolver(String seed){
+	public CFGResolver(String seed, String fileName){
 		this.seed = seed;
+		this.fileName = fileName;
 	}
 
 	public CFGResolver(Integer minVertices) {
@@ -145,7 +147,6 @@ public class CFGResolver extends MethodInvocationResolver {
 
 	@Override
 	public void endVisit(MethodDeclaration node) {
-		
 		if (!nodeStack.isEmpty()) {
 			ParseState parseState = nodeStack.pop();
 			currentNode = parseState.node;
@@ -155,7 +156,7 @@ public class CFGResolver extends MethodInvocationResolver {
 			if (graph.vertexSet() != null && graph.vertexSet().size() > (minVertices)) {
 				NamedDirectedGraph g = new NamedDirectedGraph(graph, String.valueOf(graphId++), 
 						node.getName().getFullyQualifiedName(), parseState.varName, 
-						parseState.methodName, parseState.paramTypes);
+						parseState.methodName, this.fileName, parseState.paramTypes);
 				methodCFGs.add(g);
 			}
 		}

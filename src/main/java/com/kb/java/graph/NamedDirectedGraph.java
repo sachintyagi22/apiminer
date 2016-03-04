@@ -17,17 +17,24 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 	private DirectedGraph<Node, DirectedEdge> delegate;
 	private final String seedName;
 	private final String methodName;
+
+	public String getFileName() {
+		return fileName;
+	}
+
+	private final String fileName;
 	private final String id;
 	private final String label;
 	private final Set<String> paramTypes;
 	
 	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label, String seedName,
-							  String methodName, Set<String> paramTypes)  {
+							  String methodName, String fileName, Set<String> paramTypes)  {
 		this.delegate = delegate;
 		this.id = id;
 		this.label = label;
 		this.seedName = seedName;
 		this.methodName = methodName;
+		this.fileName = fileName;
 		this.paramTypes = paramTypes;
 	}
 
@@ -36,6 +43,7 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 		this.label="";
 		this.seedName = "";
 		this.methodName = "";
+		this.fileName = "";
 		this.delegate= new DefaultDirectedGraph<Node, DirectedEdge>(DirectedEdge.class);
 		this.paramTypes = Collections.emptySet();
 	}
