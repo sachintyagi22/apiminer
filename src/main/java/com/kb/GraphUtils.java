@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jgrapht.ext.DOTExporter;
 import org.jgrapht.ext.EdgeNameProvider;
 import org.jgrapht.ext.VertexNameProvider;
@@ -20,6 +21,7 @@ import com.kodebeagle.javaparser.JavaASTParser;
 public class GraphUtils implements Serializable{
 	public Map<String, String> idMap = new HashMap<>();
 	public static int innerIdCounter = 0;
+	public CompilationUnit cuState ;
 	public List<NamedDirectedGraph> getGraphsFromFile(String fileContent, String fileName) {
 		return getGraphsFromFile(fileContent, "", fileName);
 	}
@@ -31,7 +33,7 @@ public class GraphUtils implements Serializable{
 		ASTNode cu = pars.getAST(fileContent,
 				JavaASTParser.ParseType.COMPILATION_UNIT);
 		cu.accept(cfgResolver);
-
+		cuState = ((CompilationUnit) cu);
 		List<NamedDirectedGraph> graphs = cfgResolver.getMethodCFGs();
 		return graphs;
 	}
@@ -79,8 +81,7 @@ public class GraphUtils implements Serializable{
 					g.getId(),
 					new NamedDirectedGraph(g, g.getId(), g.getLabel(), g
 							.getSeedName(), g.getMethodName(), g.getFileName(),
-							g.getParamTypes()));
-//				i++;
+							g.getParamTypes(),cuState.getLineNumber(g.getLineNumber())));
 		}
 	}
 
