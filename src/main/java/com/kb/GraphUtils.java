@@ -77,11 +77,13 @@ public class GraphUtils implements Serializable{
 
 	public void getNamedDirectedGraphs(Map<String, NamedDirectedGraph> instances, List<NamedDirectedGraph> graphs) {
 		for (NamedDirectedGraph g : graphs) {
+			int startLineNumber = cuState.getLineNumber(g.getStartLineNumber());
+			int endLineNumber = startLineNumber + g.getEndLineNumber();
 			instances.put(
 					g.getId(),
 					new NamedDirectedGraph(g, g.getId(), g.getLabel(), g
 							.getSeedName(), g.getMethodName(), g.getFileName(),
-							g.getParamTypes(),cuState.getLineNumber(g.getLineNumber())));
+							g.getParamTypes(),startLineNumber,endLineNumber));
 		}
 	}
 

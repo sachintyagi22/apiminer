@@ -156,7 +156,7 @@ public class CFGResolver extends MethodInvocationResolver {
 			if (graph.vertexSet() != null && graph.vertexSet().size() > (minVertices)) {
 				NamedDirectedGraph g = new NamedDirectedGraph(graph, String.valueOf(graphId++), 
 						node.getName().getFullyQualifiedName(), parseState.varName, 
-						parseState.methodName, this.fileName, parseState.paramTypes, node.getStartPosition());
+						parseState.methodName, this.fileName, parseState.paramTypes, node.getStartPosition(), node.getLength());
 				methodCFGs.add(g);
 			}
 		}

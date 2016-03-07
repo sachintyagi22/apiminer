@@ -26,10 +26,11 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 	private final String id;
 	private final String label;
 	private final Set<String> paramTypes;
-	private int lineNumber;
+	private int startLineNumber;
+	private int endLineNumber;
 	
 	public NamedDirectedGraph(DirectedGraph<Node, DirectedEdge> delegate, String id, String label, String seedName,
-							  String methodName, String fileName, Set<String> paramTypes, int lineNumber)  {
+							  String methodName, String fileName, Set<String> paramTypes, int startLineNumber, int endLineNumber)  {
 		this.delegate = delegate;
 		this.id = id;
 		this.label = label;
@@ -37,7 +38,8 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 		this.methodName = methodName;
 		this.fileName = fileName;
 		this.paramTypes = paramTypes;
-		this.lineNumber = lineNumber;
+		this.startLineNumber = startLineNumber;
+		this.endLineNumber = endLineNumber;
 	}
 
 	public NamedDirectedGraph() {
@@ -70,7 +72,9 @@ public class NamedDirectedGraph implements DirectedGraph<Node, DirectedEdge>, We
 		return id;
 	}
 
-	public int getLineNumber() { return lineNumber; }
+	public int getStartLineNumber() { return startLineNumber; }
+
+	public int getEndLineNumber() { return endLineNumber; }
 
 	public List<Node> getAsList(){
 		Set<Node> vertexSet = vertexSet();
