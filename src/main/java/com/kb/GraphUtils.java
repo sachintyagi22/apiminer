@@ -3,6 +3,10 @@ package com.kb;
 import java.io.*;
 import java.util.*;
 
+import com.google.common.collect.ImmutableMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
+import com.google.common.collect.TreeMultiset;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jgrapht.ext.DOTExporter;
@@ -124,6 +128,19 @@ public class GraphUtils implements Serializable{
 			return id;
 		}
 	};
+
+	public List<String> getTopN(TreeMultiset<String> seedNames, int max) {
+		List<String> elems = new ArrayList<String>(max);
+		int i = 0;
+		ImmutableMultiset<String> highestCountFirst = Multisets.copyHighestCountFirst(seedNames);
+
+		for(Multiset.Entry<String> e : highestCountFirst.entrySet()){
+			if(i > max) break;
+			i ++;
+			elems.add(e.getElement());
+		}
+		return elems;
+	}
 
 	public static EdgeNameProvider<DirectedEdge> edgeEdgeNameProvider = new EdgeNameProvider<DirectedEdge>() {
 		@Override
