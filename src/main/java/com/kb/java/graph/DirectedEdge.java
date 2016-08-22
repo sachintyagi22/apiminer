@@ -2,10 +2,12 @@ package com.kb.java.graph;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 
+import java.io.Serializable;
+
 /**
  * Created by jatina on 4/2/16.
  */
-public class DirectedEdge extends DefaultWeightedEdge {
+public class DirectedEdge extends DefaultWeightedEdge implements Serializable {
 
     private static final long serialVersionUID = 1L;
     private double weight = 1D;

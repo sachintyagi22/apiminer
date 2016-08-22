@@ -36,8 +36,8 @@ public class Main {
 	private static final String FILTERED_STRING = "java.util.HashMap";
 	private final static GraphUtils graphUtils = new GraphUtils();
 	private final static Clusterer clusterer = new Clusterer();
-	private static final Map<String, String> idMap = new HashMap<>();
-	private static int innerIdCounter = 0;
+	private static final Map<String, String> idMap = graphUtils.idMap;
+	private static int innerIdCounter = graphUtils.innerIdCounter;
 
 	public static void main(String[] args) throws Exception {
 		int n = 4;
@@ -77,9 +77,8 @@ public class Main {
             String patternFile = "/home/sachint/scratch/pattern"+ clusterIndex +".dot";
             String concreteUseFile = "/home/sachint/scratch/concrete"+ clusterIndex +".dot";
             
-            DOTExporter<Node, DirectedEdge> exporter = new DOTExporter<>(vertexIdProvider, vertexNameProvider, edgeEdgeNameProvider);
-            saveToFile(exporter, current, patternFile);
-            saveToFile(exporter, cluster.getMean(), concreteUseFile);
+            graphUtils.saveToFile(current, patternFile);
+            graphUtils.saveToFile(cluster.getMean(), concreteUseFile);
             
             clusterIndex++;
         }
@@ -118,21 +117,15 @@ public class Main {
 
 		Map<String, NamedDirectedGraph> instances = new HashMap<String, NamedDirectedGraph>();
 		for (String fileContent : sourceFiles) {
-			
 			List<NamedDirectedGraph> graphs = graphUtils.getGraphsFromFile(
 					fileContent, FILTERED_STRING);
-			Integer i = 0;
-			for (NamedDirectedGraph g : graphs) {
-				instances.put(
-						g.getId(),
-						new NamedDirectedGraph(g, g.getId(), g.getLabel(), g
-								.getSeedName(), g.getMethodName(), g
-								.getParamTypes()));
-				i++;
-			}
+//			Integer i = 0;
+			graphUtils.getNamedDirectedGraphs(instances, graphs);
 		}
 		return instances;
 	}
+
+
 
 	private static void findJavaFiles(File file, List<File> files)
 			throws IOException {
@@ -159,16 +152,6 @@ public class Main {
 
 		}
 	}
-	
-	private static void saveToFile(DOTExporter<Node, DirectedEdge> exporter,
-			NamedDirectedGraph current, String path)
-			throws FileNotFoundException {
-		File f = new File(path);
-		if(f.exists()){
-		    f.delete();
-		}
-		exporter.export(new PrintWriter(new FileOutputStream(f)), current);
-	}
 
 	private static String readInputStream(InputStream is) {
 		BufferedReader br = null;
@@ -194,31 +177,4 @@ public class Main {
 		return contents.toString();
 
 	}
-	
-	private static VertexNameProvider<Node> vertexNameProvider = new VertexNameProvider<Node>() {
-		@Override
-		public String getVertexName(Node vertex) {
-			return vertex.getLabel();
-		}
-	};
-
-    private static VertexNameProvider<Node> vertexIdProvider = new VertexNameProvider<Node>() {
-        @Override
-		public String getVertexName(Node vertex) {
-            String id = idMap.get(vertex.getLabel());
-            if(id == null){
-                id = String.valueOf(innerIdCounter++);
-                idMap.put(vertex.getLabel(), id);
-            }
-			return id;
-		}
-	};
-
-    private static EdgeNameProvider<DirectedEdge> edgeEdgeNameProvider = new EdgeNameProvider<DirectedEdge>() {
-        @Override
-        public String getEdgeName(DirectedEdge edge) {
-            return String.valueOf(edge.getWeight());
-        }
-    };
-
 }
